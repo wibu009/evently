@@ -15,18 +15,18 @@ public static class EventsModule
         GetEvent.MapEndpoints(app);
         CreateEvent.MapEndpoints(app);
     }
-    
+
     public static IServiceCollection AddEventsModule(this IServiceCollection services, IConfiguration configuration)
     {
         string databaseConnectionString = configuration.GetConnectionString("Database")!;
-        
+
         services.AddDbContext<EventsDbContext>(options => options
             .UseNpgsql(
-                databaseConnectionString, 
+                databaseConnectionString,
                 npgsqlOptionsAction => npgsqlOptionsAction
                     .MigrationsHistoryTable(HistoryRepository.DefaultTableName, Schemas.Events))
             .UseSnakeCaseNamingConvention());
-        
+
         return services;
     }
 }

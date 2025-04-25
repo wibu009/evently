@@ -16,7 +16,7 @@ public static class GetEvent
                 .Where(e => e.Id == id)
                 .Select(e => new EventResponse(e.Id, e.Title, e.Description, e.Location, e.StartAtUtc, e.EndAtUtc))
                 .SingleOrDefaultAsync();
-            
+
             return @event is null ? Results.NotFound() : Results.Ok(@event);
         })
         .WithTags(Tags.Events);
