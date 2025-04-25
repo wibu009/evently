@@ -1,5 +1,5 @@
 using Evently.Api.Extensions;
-using Evently.Modules.Events.Api;
+using Evently.Modules.Events.Infrastructure;
 using Scalar.AspNetCore;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
