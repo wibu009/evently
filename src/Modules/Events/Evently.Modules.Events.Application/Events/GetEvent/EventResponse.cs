@@ -2,8 +2,12 @@
 
 public sealed record EventResponse(
     Guid Id,
+    Guid CategoryId,
     string Title,
     string Description,
     string Location,
-    DateTimeOffset StartAtUtc,
-    DateTimeOffset? EndAtUtc);
+    DateTime StartAtUtc,
+    DateTime? EndAtUtc)
+{
+    public List<TicketTypeResponse> TicketTypes { get; } = [];
+}

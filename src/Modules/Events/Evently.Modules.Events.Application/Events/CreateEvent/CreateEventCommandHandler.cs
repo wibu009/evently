@@ -1,25 +1,51 @@
-﻿using Evently.Modules.Events.Application.Abstractions.Data;
+﻿using Evently.Modules.Events.Application.Abstractions.Clock;
+using Evently.Modules.Events.Application.Abstractions.Data;
+using Evently.Modules.Events.Application.Abstractions.Messaging;
+using Evently.Modules.Events.Domain.Abstractions;
+using Evently.Modules.Events.Domain.Categories;
 using Evently.Modules.Events.Domain.Events;
 using MediatR;
 
 namespace Evently.Modules.Events.Application.Events.CreateEvent;
 
-internal sealed class CreateEventCommandHandler(IEventRepository eventRepository,
+internal sealed class CreateEventCommandHandler(
+    IDateTimeProvider dateTimeProvider,
+    IEventRepository eventRepository,
+    ICategoryRepository categoryRepository,
     IUnitOfWork unitOfWork)
-    : IRequestHandler<CreateEventCommand, Guid>
+    : ICommandHandler<CreateEventCommand, Guid>
 {
-    public async Task<Guid> Handle(CreateEventCommand request, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> Handle(CreateEventCommand request, CancellationToken cancellationToken)
     {
-        var @event = Event.Create(
+        if (request.StartAtUtc < dateTimeProvider.UtcNow)
+        {
+            return Result.Failure<Guid>(EventErrors.StartDateInPast);
+        }
+        
+        Category? category = await categoryRepository.GetAsync(request.CategoryId, cancellationToken);
+        
+        if (category is null)
+        {
+            return Result.Failure<Guid>(CategoryErrors.NotFound(request.CategoryId));
+        }
+
+        Result<Event> @event = Event.Create(
+            category,
             request.Title,
             request.Description,
             request.Location,
             request.StartAtUtc,
             request.EndAtUtc);
         
-        eventRepository.Insert(@event);
-        await unitOfWork.SaveChangesAsync(cancellationToken); 
+        if (@event.IsFailure)
+        {
+            return Result.Failure<Guid>(@event.Error);
+        }
         
-        return @event.Id;
+        eventRepository.Insert(@event.Value);
+        
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        
+        return @event.Value.Id;
     }
 }

@@ -2,7 +2,7 @@
 
 public abstract class DomainEvent(Guid id, DateTime occurredAtUtc) : IDomainEvent
 {
-    protected DomainEvent() : this(Guid.NewGuid(), DateTime.UtcNow)
+    protected DomainEvent() : this(Guid.CreateVersion7(), DateTime.UtcNow)
     {
     }
 
