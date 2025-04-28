@@ -1,6 +1,6 @@
-﻿using Evently.Modules.Events.Application.TicketTypes.GetTicketType;
-using Evently.Modules.Events.Domain.Abstractions;
-using Evently.Modules.Events.Presentation.ApiResults;
+﻿using Evently.Common.Domain;
+using Evently.Common.Presentation.ApiResults;
+using Evently.Modules.Events.Application.TicketTypes.GetTicketType;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -16,7 +16,7 @@ internal static class GetTicketType
         {
             Result<TicketTypeResponse> result = await sender.Send(new GetTicketTypeQuery(id));
 
-            return result.Match(Results.Ok, ApiResults.ApiResults.Problem);
+            return result.Match(Results.Ok, ApiResults.Problem);
         })
         .WithTags(Tags.TicketTypes);
     }

@@ -1,7 +1,7 @@
-﻿using Evently.Modules.Events.Domain.Abstractions;
+﻿using Evently.Common.Domain;
 using MediatR;
 
-namespace Evently.Modules.Events.Application.Abstractions.Messaging;
+namespace Evently.Common.Application.Messaging;
 
 public interface ICommand : IRequest<Result>, IBaseCommand;
 
