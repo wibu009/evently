@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using Evently.Common.Application.Clock;
 using Evently.Common.Application.Data;
+using Evently.Common.Presentation.Endpoints;
 using Evently.Modules.Events.Application;
 using Evently.Modules.Events.Application.Abstractions.Data;
 using Evently.Modules.Events.Domain.Categories;
@@ -26,14 +27,7 @@ namespace Evently.Modules.Events.Infrastructure;
 
 public static class EventsModule
 {
-    public static void MapEndpoints(IEndpointRouteBuilder app)
-    {
-        EventEndpoints.MapEndpoints(app);
-        CategoryEndpoints.MapEndpoints(app);
-        TicketTypeEndpoints.MapEndpoints(app);
-    }
-
-    public static IServiceCollection AddEventsModule(this IServiceCollection services, IConfiguration configuration)
+    public static void AddEventsModule( this IServiceCollection services, IConfiguration configuration)
     {
         services.AddMediatR(config =>
         {
@@ -43,8 +37,8 @@ public static class EventsModule
         services.AddValidatorsFromAssembly(AssemblyReference.Assembly, includeInternalTypes: true);
         
         services.AddInfrastructure(configuration);
-
-        return services;
+        
+        services.AddEndpoints(Presentation.AssemblyReference.Assembly);
     }
 
     private static void AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
