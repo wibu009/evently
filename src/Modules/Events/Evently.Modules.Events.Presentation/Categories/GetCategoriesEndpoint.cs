@@ -1,6 +1,7 @@
 ﻿using Evently.Common.Domain;
 using Evently.Common.Presentation.Endpoints;
 using Evently.Common.Presentation.Results;
+using Evently.Modules.Events.Application.Categories.GetCategories;
 using Evently.Modules.Events.Application.Categories.GetCategory;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -9,23 +10,20 @@ using Microsoft.AspNetCore.Routing;
 
 namespace Evently.Modules.Events.Presentation.Categories;
 
-internal sealed class GetCategory : IEndpoint
+internal sealed class GetCategoriesEndpoint :IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("categories/{id:guid}", async (Guid id, ISender sender) =>
+        app.MapGet("categories", async (ISender sender) =>
             {
-                Result<CategoryResponse> result = await sender.Send(new GetCategoryQuery(id));
+                Result<IReadOnlyCollection<CategoryResponse>> result = await sender.Send(new GetCategoriesQuery());
                 return result.Match(Results.Ok, ApiResults.Problem);
             })
             .WithTags(Tags.Categories)
-            .WithName("Get Category")
-            .Produces<CategoryResponse>(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status400BadRequest)
-            .ProducesProblem(StatusCodes.Status404NotFound)
+            .WithName("Get Categories")
+            .Produces<IReadOnlyCollection<CategoryResponse>>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
-            .WithSummary("Retrieves a category by ID")
-            .WithDescription("Fetches the details of a category identified by its unique ID, including its name.");
+            .WithSummary("Retrieves all categories")
+            .WithDescription("Fetches a list of all categories with their IDs and names.");
     }
 }
-

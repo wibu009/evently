@@ -1,30 +1,30 @@
 ﻿using Evently.Common.Domain;
 using Evently.Common.Presentation.Endpoints;
 using Evently.Common.Presentation.Results;
-using Evently.Modules.Events.Application.Categories.ArchiveCategory;
+using Evently.Modules.Events.Application.Events.CancelEvent;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 
-namespace Evently.Modules.Events.Presentation.Categories;
+namespace Evently.Modules.Events.Presentation.Events;
 
-internal sealed class ArchiveCategory : IEndpoint
+internal sealed class CancelEventEndpoint : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapDelete("categories/{id:guid}/archive", async (Guid id, ISender sender) =>
+        app.MapDelete("events/{id:guid}/cancel", async (Guid id, ISender sender) =>
             {
-                Result result = await sender.Send(new ArchiveCategoryCommand(id));
+                Result result = await sender.Send(new CancelEventCommand(id));
                 return result.Match(Results.NoContent, ApiResults.Problem);
             })
-            .WithTags(Tags.Categories)
-            .WithName("Archive Category")
+            .WithTags(Tags.Events)
+            .WithName("Cancel Event")
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
-            .WithSummary("Archives a category by its ID")
-            .WithDescription("Marks a category as archived, making it inactive without permanent deletion. The operation is idempotent.");
+            .WithSummary("Cancels an event by its ID")
+            .WithDescription("Marks an event as canceled, making it inactive without permanent deletion. The operation is idempotent.");
     }
 }

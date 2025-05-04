@@ -1,5 +1,7 @@
-﻿using Evently.Common.Application.Clock;
+﻿using Evently.Common.Application.Caching;
+using Evently.Common.Application.Clock;
 using Evently.Common.Application.Data;
+using Evently.Common.Infrastructure.Caching;
 using Evently.Common.Infrastructure.Clock;
 using Evently.Common.Infrastructure.Data;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,13 +14,13 @@ public static class InfrastructureConfiguration
 {
     public static void AddInfrastructure(
         this IServiceCollection services,
-        string databaseConnectionString)
+        string databaseConnectionString,
+        string redisConnectionString)
     {
-        NpgsqlDataSource npgsqlDataSource = new NpgsqlDataSourceBuilder(databaseConnectionString).Build();
-        services.TryAddSingleton(npgsqlDataSource);
-
-        services.AddScoped<IDbConnectionFactory, DbConnectionFactory>();
+        services.AddDateTimeProvider();
         
-        services.TryAddSingleton<IDateTimeProvider, DateTimeProvider>();
+        services.AddDbConnectionFactory(databaseConnectionString);
+        
+        services.AddCaching(redisConnectionString);
     }
 }

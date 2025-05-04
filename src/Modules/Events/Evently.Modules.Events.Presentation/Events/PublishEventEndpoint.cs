@@ -1,7 +1,7 @@
 ﻿using Evently.Common.Domain;
 using Evently.Common.Presentation.Endpoints;
 using Evently.Common.Presentation.Results;
-using Evently.Modules.Events.Application.Events.GetEvent;
+using Evently.Modules.Events.Application.Events.PublishEvent;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -9,22 +9,22 @@ using Microsoft.AspNetCore.Routing;
 
 namespace Evently.Modules.Events.Presentation.Events;
 
-internal sealed class GetEvent : IEndpoint
+internal sealed class PublishEventEndpoint : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("events/{id:guid}", async (Guid id, ISender sender) =>
+        app.MapPut("events/{id:guid}/publish", async (Guid id, ISender sender) =>
             {
-                Result<EventResponse> result = await sender.Send(new GetEventQuery(id));
-                return result.Match(Results.Ok, ApiResults.Problem);
+                Result result = await sender.Send(new PublishEventCommand(id));
+                return result.Match(Results.NoContent, ApiResults.Problem);
             })
             .WithTags(Tags.Events)
-            .WithName("Get Event")
-            .Produces<EventResponse>(StatusCodes.Status200OK)
+            .WithName("Publish Event")
+            .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
-            .WithSummary("Retrieves an event by ID")
-            .WithDescription("Fetches the details of an event identified by its unique ID, including title, category, and dates.");
+            .WithSummary("Publishes an event by its ID")
+            .WithDescription("Marks an event as published, making it publicly visible. The operation is idempotent.");
     }
 }
