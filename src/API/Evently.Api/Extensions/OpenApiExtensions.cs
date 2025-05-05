@@ -1,10 +1,36 @@
 ﻿using Microsoft.AspNetCore.OpenApi;
+using Microsoft.OpenApi.Models;
 
 namespace Evently.Api.Extensions;
 
 internal static class OpenApiExtensions
 {
-    public static void CustomSchemaIds(this OpenApiOptions config,
+    public static void AddOpenApiDocumentation(this IServiceCollection services)
+    {
+        services.AddOpenApi(options =>
+        {
+            options.AddDocumentTransformer((document, _, _) =>
+            {
+                document.Info = new OpenApiInfo
+                {
+                    Title = "Evently API",
+                    Version = "v1",
+                    Description = "Evently API empowers seamless event management, connecting organizers and attendees with intuitive tools for creating, managing, and enjoying unforgettable events.",
+                    Contact = new OpenApiContact
+                    {
+                        Name = "Evently Support",
+                        Email = "support@evently.com",
+                        Url = new Uri("https://evently.com/support")
+                    },
+                    TermsOfService = new Uri("https://evently.com/terms")
+                };
+                return Task.CompletedTask;
+            });
+            options.CustomSchemaIds(type => type is { Name: "Request", DeclaringType: not null } ? $"{type.DeclaringType.Name}Request" : type.Name);
+        });
+    }
+
+    private static void CustomSchemaIds(this OpenApiOptions config,
         Func<Type, string?> typeSchemaTransformer,
         bool includeValueTypes = false)
     {

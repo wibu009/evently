@@ -20,3 +20,19 @@ services:
       - ./.containers/database:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+  
+  evently.seq:
+    image: datalust/seq:latest
+    container_name: evently.sequence
+    environment:
+      - ACCEPT_EULA=Y
+    ports:
+      - "5341:5341"
+      - "8082:80"
+  
+  evently.cache:
+    image: redis:latest
+    container_name: evently.redis
+    restart: always
+    ports:
+      - "6379:6379"

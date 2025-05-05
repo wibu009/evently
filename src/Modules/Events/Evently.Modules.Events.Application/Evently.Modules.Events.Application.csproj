@@ -1,10 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <ItemGroup>
+      <ProjectReference Include="..\..\..\Common\Evently.Common.Application\Evently.Common.Application.csproj" />
       <ProjectReference Include="..\Evently.Modules.Events.Domain\Evently.Modules.Events.Domain.csproj" />
-    </ItemGroup>
-    <ItemGroup>
-      <PackageReference Include="Dapper" Version="2.1.66" />
-      <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
-      <PackageReference Include="MediatR" Version="12.5.0" />
     </ItemGroup>
 </Project>

@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <ItemGroup>
+      <ProjectReference Include="..\Evently.Common.Application\Evently.Common.Application.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="EFCore.NamingConventions" Version="9.0.0" />
+      <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" Version="9.4.0" />
+      <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="9.0.2" />
+      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+    </ItemGroup>
+</Project>
