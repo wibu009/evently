@@ -1,6 +1,4 @@
-﻿using Dapper;
-using Evently.Common.Application.Clock;
-using Evently.Common.Application.Data;
+﻿using Evently.Common.Infrastructure.Interceptors;
 using Evently.Common.Presentation.Endpoints;
 using Evently.Modules.Events.Application;
 using Evently.Modules.Events.Application.Abstractions.Data;
@@ -11,17 +9,11 @@ using Evently.Modules.Events.Infrastructure.Categories;
 using Evently.Modules.Events.Infrastructure.Database;
 using Evently.Modules.Events.Infrastructure.Events;
 using Evently.Modules.Events.Infrastructure.TicketTypes;
-using Evently.Modules.Events.Presentation.Categories;
-using Evently.Modules.Events.Presentation.Events;
-using Evently.Modules.Events.Presentation.TicketTypes;
 using FluentValidation;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Npgsql;
 
 namespace Evently.Modules.Events.Infrastructure;
 
@@ -51,7 +43,9 @@ public static class EventsModule
                 npgsqlOptionsAction => npgsqlOptionsAction
                     .MigrationsHistoryTable(HistoryRepository.DefaultTableName, Schemas.Events))
             .UseSnakeCaseNamingConvention()
-            .AddInterceptors());
+            .AddInterceptors(services
+                .BuildServiceProvider()
+                .GetRequiredService<PublishDomainEventsInterceptor>()));
 
         services.AddScoped<IEventRepository, EventRepository>();
         services.AddScoped<ITicketTypeRepository, TicketTypeRepository>();

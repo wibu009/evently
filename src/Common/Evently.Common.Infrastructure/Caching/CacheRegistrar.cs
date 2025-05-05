@@ -9,11 +9,19 @@ internal static class CacheRegistrar
 {
     public static void AddCaching(this IServiceCollection services, string redisConnectionString)
     {
-        IConnectionMultiplexer connectionMultiplexer = ConnectionMultiplexer.Connect(redisConnectionString);
-        services.TryAddSingleton(connectionMultiplexer);
+        try
+        {
+            IConnectionMultiplexer connectionMultiplexer = ConnectionMultiplexer.Connect(redisConnectionString);
+            services.TryAddSingleton(connectionMultiplexer);
         
-        services.AddStackExchangeRedisCache(options => 
-            options.ConnectionMultiplexerFactory = () => Task.FromResult(connectionMultiplexer));
+            services.AddStackExchangeRedisCache(options => 
+                options.ConnectionMultiplexerFactory = () => Task.FromResult(connectionMultiplexer));
+        }
+        catch
+        {
+            services.AddDistributedMemoryCache();
+        }
+        
         services.AddHybridCache();
         
         services.TryAddSingleton<ICacheService, CacheService>();
