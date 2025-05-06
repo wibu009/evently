@@ -9,7 +9,7 @@ public static class ApplicationConfiguration
 {
     public static void AddApplication(
         this IServiceCollection services,
-        Assembly[] moduleAssemblies)
+        params Assembly[] moduleAssemblies)
     {
         services.AddMediatR(config =>
         {

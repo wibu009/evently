@@ -1,6 +1,4 @@
 ﻿using Evently.Common.Infrastructure.Interceptors;
-using Evently.Common.Presentation.Endpoints;
-using Evently.Modules.Events.Application;
 using Evently.Modules.Events.Application.Abstractions.Data;
 using Evently.Modules.Events.Domain.Categories;
 using Evently.Modules.Events.Domain.Events;
@@ -8,8 +6,9 @@ using Evently.Modules.Events.Domain.TicketTypes;
 using Evently.Modules.Events.Infrastructure.Categories;
 using Evently.Modules.Events.Infrastructure.Database;
 using Evently.Modules.Events.Infrastructure.Events;
+using Evently.Modules.Events.Infrastructure.PublicApi;
 using Evently.Modules.Events.Infrastructure.TicketTypes;
-using FluentValidation;
+using Evently.Modules.Events.PublicApi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
@@ -21,16 +20,7 @@ public static class EventsModule
 {
     public static void AddEventsModule( this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddMediatR(config =>
-        {
-            config.RegisterServicesFromAssembly(AssemblyReference.Assembly);
-        });
-
-        services.AddValidatorsFromAssembly(AssemblyReference.Assembly, includeInternalTypes: true);
-        
         services.AddInfrastructure(configuration);
-        
-        services.AddEndpoints(Presentation.AssemblyReference.Assembly);
     }
 
     private static void AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
@@ -50,5 +40,7 @@ public static class EventsModule
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<EventsDbContext>());
+
+        services.AddScoped<IEventsApi, EventsApi>();
     }
 }

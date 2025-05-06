@@ -15,19 +15,20 @@ internal sealed class QueryCachingPipelineBehavior<TRequest, TResponse>(
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
         string requestName = request.GetType().Name;
-
-        logger.LogInformation("Processing cached request: {RequestName}", requestName);
         
-        TResponse result = await cacheService.GetOrCreateAsync(
-            key: request.CacheKey,
-            factory: async ct => await next(ct),
-            expiration: request.Expiration,
-            localCacheExpiration: request.LocalCacheExpiration,
-            tags: request.Tags,
-            cancellationToken: cancellationToken
-        );
-
-        logger.LogInformation("Completed cached request: {RequestName}", requestName);
+        TResponse? cachedResult = await cacheService.GetAsync<TResponse>(request.CacheKey, cancellationToken);
+        if (cachedResult is not null)
+        {
+            logger.LogInformation("Cache hit for {Query}", requestName);
+            return cachedResult;
+        }
+        
+        logger.LogInformation("Cache miss for {Query}", requestName);
+        TResponse result = await next(cancellationToken);
+        if (result.IsSuccess)
+        {
+            await cacheService.SetAsync(request.CacheKey, result, request.Expiration, request.LocalCacheExpiration, cancellationToken: cancellationToken);
+        }
 
         return result;
     }
