@@ -1,0 +1,33 @@
+﻿using System.Data.Common;
+using Dapper;
+using Evently.Common.Application.Data;
+using Evently.Common.Application.Messaging;
+using Evently.Common.Domain;
+using Evently.Modules.Users.Domain.Users;
+
+namespace Evently.Modules.Users.Application.Users.GetUser;
+
+internal sealed class GetUserQueryHandler(
+    IDbConnectionFactory dbConnectionFactory)
+    : IQueryHandler<GetUserQuery, UserResponse>
+{
+    public async Task<Result<UserResponse>> Handle(GetUserQuery request, CancellationToken cancellationToken)
+    {
+        await using DbConnection connection = await dbConnectionFactory.OpenConnectionAsync(cancellationToken);
+        
+        const string sql =
+            $"""
+             SELECT
+                 id AS {nameof(UserResponse.Id)},
+                 email AS {nameof(UserResponse.Email)},
+                 first_name AS {nameof(UserResponse.FirstName)},
+                 last_name AS {nameof(UserResponse.LastName)},
+             FROM users.users
+             WHERE id = @UserId
+             """;
+        
+        UserResponse? user = await connection.QueryFirstOrDefaultAsync<UserResponse>(sql, request);
+        
+        return user ?? Result.Failure<UserResponse>(UserErrors.NotFound(request.UserId));
+    }
+}
