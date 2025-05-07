@@ -9,14 +9,14 @@ namespace Evently.Modules.Ticketing.Application.Carts.AddItemToCart;
 
 internal sealed class AddItemToCartCommandHandler(
     CartService cartService,
-    IUsersApi usersApi,
+    ICustomerRepository customerRepository,
     IEventsApi eventsApi)
     : ICommandHandler<AddItemToCartCommand>
 {
     public async Task<Result> Handle(AddItemToCartCommand request, CancellationToken cancellationToken)
     {
         // 1. Get customer
-        UserResponse? customer = await usersApi.GetAsync(request.CustomerId, cancellationToken);
+        Customer? customer = await customerRepository.GetAsync(request.CustomerId, cancellationToken);
         if (customer is null)
         {
             return Result.Failure(CustomerErrors.NotFound(request.CustomerId));

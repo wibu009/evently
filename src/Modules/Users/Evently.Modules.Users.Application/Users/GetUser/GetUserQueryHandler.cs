@@ -21,12 +21,12 @@ internal sealed class GetUserQueryHandler(
                  id AS {nameof(UserResponse.Id)},
                  email AS {nameof(UserResponse.Email)},
                  first_name AS {nameof(UserResponse.FirstName)},
-                 last_name AS {nameof(UserResponse.LastName)},
+                 last_name AS {nameof(UserResponse.LastName)}
              FROM users.users
              WHERE id = @UserId
              """;
         
-        UserResponse? user = await connection.QueryFirstOrDefaultAsync<UserResponse>(sql, request);
+        UserResponse? user = await connection.QuerySingleOrDefaultAsync<UserResponse>(sql, request);
         
         return user ?? Result.Failure<UserResponse>(UserErrors.NotFound(request.UserId));
     }

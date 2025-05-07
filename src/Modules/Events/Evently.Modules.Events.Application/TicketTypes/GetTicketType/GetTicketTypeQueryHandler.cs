@@ -28,7 +28,7 @@ internal sealed class GetTicketTypeQueryHandler(IDbConnectionFactory dbConnectio
              WHERE id = @TicketTypeId
              """;
         
-        TicketTypeResponse? ticketType = await connection.QueryFirstOrDefaultAsync<TicketTypeResponse>(sql, request);
+        TicketTypeResponse? ticketType = await connection.QuerySingleOrDefaultAsync<TicketTypeResponse>(sql, request);
         
         return ticketType ?? Result.Failure<TicketTypeResponse>(TicketTypeErrors.NotFound(request.TicketTypeId));
     }
