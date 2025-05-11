@@ -27,7 +27,10 @@ builder.Services.AddApplication(
     Evently.Modules.Ticketing.Application.AssemblyReference.Assembly);
 string databaseConnectionString = builder.Configuration.GetConnectionString("Database")!;
 string redisConnectionString = builder.Configuration.GetConnectionString("Cache")!;
-builder.Services.AddInfrastructure(databaseConnectionString, redisConnectionString);
+builder.Services.AddInfrastructure(
+    databaseConnectionString,
+    redisConnectionString,
+    [TicketingModule.ConfigureConsumers]);
 
 builder.Services.AddEventsModule(builder.Configuration);
 builder.Services.AddUsersModule(builder.Configuration);

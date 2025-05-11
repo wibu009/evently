@@ -5,4 +5,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Evently.Common.Application\Evently.Common.Application.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MassTransit.Abstractions" Version="8.4.0" />
+  </ItemGroup>
 </Project>
