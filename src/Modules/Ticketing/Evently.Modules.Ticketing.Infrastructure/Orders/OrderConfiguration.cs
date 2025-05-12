@@ -12,6 +12,5 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.HasKey(o => o.Id);
 
         builder.HasOne<Customer>().WithMany().HasForeignKey(o => o.CustomerId);
-        builder.HasMany<OrderItem>().WithOne().HasForeignKey(o => o.OrderId);
     }
 }

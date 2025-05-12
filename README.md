@@ -3,7 +3,7 @@
 Evently is a modular event management API built with ASP.NET Core. This project is in its early stages.
 
 ## Getting Started
-You can run the project using Docker (recommended) or with .NET 9 SDK and PostgreSQL installed locally.
+You can run the project using Docker (recommended) or with .NET 9 SDK and PostgreSQL installed locally. Once running, access the API docs at `http://localhost:5000/scalar` (HTTP) or `https://localhost:5001/scalar` (HTTPS) to check it out!
 
 ### With Docker
 1. Make sure you have Docker installed.

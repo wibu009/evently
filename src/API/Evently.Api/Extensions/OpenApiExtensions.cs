@@ -26,7 +26,16 @@ internal static class OpenApiExtensions
                 };
                 return Task.CompletedTask;
             });
-            options.CustomSchemaIds(type => type is { Name: "Request", DeclaringType: not null } ? $"{type.DeclaringType.Name}Request" : type.Name);
+            options.CustomSchemaIds(type => 
+            {
+                if (type is not { Name: "Request", DeclaringType: not null })
+                {
+                    return type.Name;
+                }
+                
+                string cleanedName = type.DeclaringType.Name.Replace("Endpoint", "", StringComparison.OrdinalIgnoreCase);
+                return $"{cleanedName}Request";
+            });
         });
     }
 
