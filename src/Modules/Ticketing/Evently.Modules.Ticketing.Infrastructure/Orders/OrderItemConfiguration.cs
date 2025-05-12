@@ -14,5 +14,6 @@ internal sealed class OrderItemConfiguration : IEntityTypeConfiguration<OrderIte
         builder.Property(c => c.Id).ValueGeneratedNever();
         
         builder.HasOne<TicketType>().WithMany().HasForeignKey(oi => oi.TicketTypeId);
+        builder.HasOne<Order>().WithMany(o => o.OrderItems).HasForeignKey(oi => oi.OrderId);
     }
 }
