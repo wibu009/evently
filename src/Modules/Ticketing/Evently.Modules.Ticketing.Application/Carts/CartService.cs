@@ -35,7 +35,7 @@ public sealed class CartService(ICacheService cacheService)
         string cacheKey = CreateCacheKey(customerId);
         
         Cart cart = await GetAsync(customerId, cancellationToken);
-        CartItem? existingCartItem = cart.Items.FirstOrDefault(c => c.TicketTypeId == cartItem.TicketTypeId);
+        CartItem? existingCartItem = cart.Items.Find(c => c.TicketTypeId == cartItem.TicketTypeId);
         
         if (existingCartItem is null)
         {

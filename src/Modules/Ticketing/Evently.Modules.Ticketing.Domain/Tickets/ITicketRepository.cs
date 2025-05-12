@@ -7,4 +7,5 @@ public interface ITicketRepository
     Task<Ticket?> GetAsync(Guid id, CancellationToken cancellationToken = default);
     Task<IEnumerable<Ticket>> GetForEventAsync(Event @event, CancellationToken cancellationToken = default);
     void Insert(Ticket ticket);
+    void InsertRange(IEnumerable<Ticket> tickets);
 }
