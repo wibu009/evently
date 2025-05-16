@@ -21,6 +21,19 @@ services:
     ports:
       - "5432:5432"
   
+  evently.idp:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: evently.identity
+    environment:
+      - KC_HEALTH_ENABLED=true
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    volumes:
+      - ./.containers/identity:/opt/keycloak/data
+      - ./.files:/opt/keycloak/data/import
+    ports:
+      - "18080:8080"
+  
   evently.seq:
     image: datalust/seq:latest
     container_name: evently.sequence
