@@ -19,6 +19,7 @@ internal sealed class GetTicketEndpoint : IEndpoint
 
                 return result.Match(Results.Ok, ApiResults.Problem);
             })
+            .RequireAuthorization()
             .WithTags(Tags.Tickets)
             .WithName("Get Ticket")
             .Produces(StatusCodes.Status200OK)

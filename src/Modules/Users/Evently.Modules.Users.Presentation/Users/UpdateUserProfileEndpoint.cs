@@ -21,6 +21,7 @@ internal sealed class UpdateUserProfileEndpoint : IEndpoint
                     request.LastName));
                 return result.Match(Results.NoContent, ApiResults.Problem);
             })
+            .RequireAuthorization()
             .WithTags(Tags.Users)
             .WithName("Update User Profile")
             .Produces(StatusCodes.Status204NoContent)

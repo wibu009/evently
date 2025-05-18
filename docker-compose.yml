@@ -11,7 +11,7 @@ services:
 
   evently.db:
     image: postgres:latest
-    container_name: evently.db
+    container_name: evently.database
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -26,6 +26,7 @@ services:
     container_name: evently.identity
     environment:
       - KC_HEALTH_ENABLED=true
+      - KC_METRICS_ENABLED=true
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
     volumes:
@@ -33,6 +34,10 @@ services:
       - ./.files:/opt/keycloak/data/import
     ports:
       - "18080:8080"
+      - "9000:9000"
+    command:
+      - start-dev
+      - --import-realm
   
   evently.seq:
     image: datalust/seq:latest

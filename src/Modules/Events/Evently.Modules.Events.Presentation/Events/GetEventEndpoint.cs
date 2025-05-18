@@ -18,6 +18,7 @@ internal sealed class GetEventEndpoint : IEndpoint
                 Result<EventResponse> result = await sender.Send(new GetEventQuery(id));
                 return result.Match(Results.Ok, ApiResults.Problem);
             })
+            .RequireAuthorization()
             .WithTags(Tags.Events)
             .WithName("Get Event")
             .Produces<EventResponse>(StatusCodes.Status200OK)

@@ -23,6 +23,7 @@ internal sealed class AddToCartEndpoint : IEndpoint
 
                 return result.Match(Results.NoContent, ApiResults.Problem);
             })
+            .RequireAuthorization()
             .WithTags(Tags.Carts)
             .WithName("Add Item to Cart")
             .Produces(StatusCodes.Status204NoContent)

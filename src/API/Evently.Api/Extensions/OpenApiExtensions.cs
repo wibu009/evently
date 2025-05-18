@@ -24,8 +24,35 @@ internal static class OpenApiExtensions
                     },
                     TermsOfService = new Uri("https://evently.com/terms")
                 };
+                
+                document.Components ??= new OpenApiComponents();
+                
+                document.Components.SecuritySchemes.Add("Bearer", new OpenApiSecurityScheme
+                {
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT",
+                    Description = "JWT Authorization header using the Bearer scheme. Example: 'Bearer {token}'"
+                });
+                
+                document.SecurityRequirements.Add(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        []
+                    }
+                });
+
                 return Task.CompletedTask;
             });
+
             options.CustomSchemaIds(type => 
             {
                 if (type is not { Name: "Request", DeclaringType: not null })

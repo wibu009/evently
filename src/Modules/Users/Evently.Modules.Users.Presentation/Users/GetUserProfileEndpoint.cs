@@ -18,6 +18,7 @@ internal sealed class GetUserProfileEndpoint : IEndpoint
                 Result<UserResponse> result = await sender.Send(new GetUserQuery(id));
                 return result.Match(Results.Ok, ApiResults.Problem);
             })
+            .RequireAuthorization()
             .WithTags(Tags.Users) .WithName("Get User Profile")
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)

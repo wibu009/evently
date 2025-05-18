@@ -24,6 +24,7 @@ internal sealed class CreateEventEndpoint : IEndpoint
                     request.EndAtUtc));
                 return result.Match(Results.Ok, ApiResults.Problem);
             })
+            .RequireAuthorization()
             .WithTags(Tags.Events)
             .WithName("Create Event")
             .Produces<Guid>(StatusCodes.Status200OK)

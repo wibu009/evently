@@ -18,6 +18,7 @@ internal sealed class RescheduleEventEndpoint : IEndpoint
                 Result result = await sender.Send(new RescheduleEventCommand(id, request.StartAtUtc, request.EndAtUtc));
                 return result.Match(Results.NoContent, ApiResults.Problem);
             })
+            .RequireAuthorization()
             .WithTags(Tags.Events)
             .WithName("Reschedule Event")
             .Produces(StatusCodes.Status204NoContent)
