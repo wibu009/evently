@@ -23,6 +23,7 @@ internal sealed class CreateTicketTypeEndpoint : IEndpoint
                     request.Quantity));
                 return result.Match(Results.Ok, ApiResults.Problem);
             })
+            .RequireAuthorization(Permissions.ModifyTicketTypes)
             .WithTags(Tags.TicketTypes)
             .WithName("Create Ticket Type")
             .Produces<Guid>(StatusCodes.Status200OK)

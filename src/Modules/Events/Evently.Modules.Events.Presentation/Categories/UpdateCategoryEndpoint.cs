@@ -18,6 +18,7 @@ internal sealed class UpdateCategoryEndpoint : IEndpoint
                 Result result = await sender.Send(new UpdateCategoryCommand(id, request.Name));
                 return result.Match(Results.NoContent, ApiResults.Problem);
             })
+            .RequireAuthorization(Permissions.ModifyCategories)
             .WithTags(Tags.Categories)
             .WithName("Update Category")
             .Produces(StatusCodes.Status204NoContent)

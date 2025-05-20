@@ -18,6 +18,7 @@ internal sealed class ArchiveCategoryEndpoint : IEndpoint
                 Result result = await sender.Send(new ArchiveCategoryCommand(id));
                 return result.Match(Results.NoContent, ApiResults.Problem);
             })
+            .RequireAuthorization(Permissions.ModifyCategories)
             .WithTags(Tags.Categories)
             .WithName("Archive Category")
             .Produces(StatusCodes.Status204NoContent)

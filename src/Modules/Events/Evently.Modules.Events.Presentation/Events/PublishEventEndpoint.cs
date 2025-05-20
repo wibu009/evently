@@ -18,6 +18,7 @@ internal sealed class PublishEventEndpoint : IEndpoint
                 Result result = await sender.Send(new PublishEventCommand(id));
                 return result.Match(Results.NoContent, ApiResults.Problem);
             })
+            .RequireAuthorization(Permissions.ModifyEvents)
             .WithTags(Tags.Events)
             .WithName("Publish Event")
             .Produces(StatusCodes.Status204NoContent)

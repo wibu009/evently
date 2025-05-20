@@ -19,6 +19,7 @@ internal sealed class GetCategoriesEndpoint :IEndpoint
                 Result<IReadOnlyCollection<CategoryResponse>> result = await sender.Send(new GetCategoriesQuery());
                 return result.Match(Results.Ok, ApiResults.Problem);
             })
+            .RequireAuthorization(Permissions.GetCategories)
             .WithTags(Tags.Categories)
             .WithName("Get Categories")
             .Produces<IReadOnlyCollection<CategoryResponse>>(StatusCodes.Status200OK)
