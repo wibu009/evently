@@ -25,7 +25,7 @@ internal sealed class SearchEventsEndpoint : IEndpoint
                     new SearchEventsQuery(categoryId, startDate, endDate, page, pageSize));
                 return result.Match(Results.Ok, ApiResults.Problem);
             })
-            .RequireAuthorization()
+            .RequireAuthorization(Permissions.GetEvents)
             .WithTags(Tags.Events)
             .WithName("Search Events")
             .Produces<SearchEventsResponse>(StatusCodes.Status200OK)

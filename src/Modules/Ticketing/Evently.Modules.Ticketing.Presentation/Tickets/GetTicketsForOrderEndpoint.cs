@@ -21,7 +21,7 @@ internal sealed class GetTicketsForOrderEndpoint : IEndpoint
 
                 return result.Match(Results.Ok<IReadOnlyList<TicketResponse>>, ApiResults.Problem);
             })
-            .RequireAuthorization()
+            .RequireAuthorization(Permissions.GetTickets)
             .WithTags(Tags.Tickets)
             .WithName("Get Tickets For Order")
             .Produces(StatusCodes.Status200OK)

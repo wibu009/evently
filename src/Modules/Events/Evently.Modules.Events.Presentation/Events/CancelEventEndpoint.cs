@@ -18,7 +18,7 @@ internal sealed class CancelEventEndpoint : IEndpoint
                 Result result = await sender.Send(new CancelEventCommand(id));
                 return result.Match(Results.NoContent, ApiResults.Problem);
             })
-            .RequireAuthorization()
+            .RequireAuthorization(Permissions.ModifyEvents)
             .WithTags(Tags.Events)
             .WithName("Cancel Event")
             .Produces(StatusCodes.Status204NoContent)

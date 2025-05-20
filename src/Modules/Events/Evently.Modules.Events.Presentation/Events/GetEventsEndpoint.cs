@@ -18,7 +18,7 @@ internal sealed class GetEventsEndpoint : IEndpoint
                 Result<IReadOnlyCollection<EventResponse>> result = await sender.Send(new GetEventsQuery());
                 return result.Match(Results.Ok, ApiResults.Problem);
             })
-            .RequireAuthorization()
+            .RequireAuthorization(Permissions.GetEvents)
             .WithTags(Tags.Events)
             .WithName("Get Events")
             .Produces<IReadOnlyCollection<EventResponse>>(StatusCodes.Status200OK)

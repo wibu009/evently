@@ -19,7 +19,7 @@ internal sealed class GetOrderEndpoint : IEndpoint
 
                 return result.Match(Results.Ok, ApiResults.Problem);
             })
-            .RequireAuthorization()
+            .RequireAuthorization(Permissions.GetOrders)
             .WithTags(Tags.Orders)
             .WithName("Get Order")
             .Produces(StatusCodes.Status200OK)

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Evently.Common.Application.Authentication;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Evently.Common.Infrastructure.Authentication;
 
@@ -11,5 +12,7 @@ internal static class AuthenticationExtensions
         services.AddHttpContextAccessor();
 
         services.ConfigureOptions<JwtBearerConfigureOptions>();
+
+        services.AddScoped<ICurrentActor, CurrentActor>();
     }
 }
