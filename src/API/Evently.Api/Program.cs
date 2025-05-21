@@ -3,6 +3,7 @@ using Evently.Api.Middleware;
 using Evently.Common.Application;
 using Evently.Common.Infrastructure;
 using Evently.Common.Presentation.Endpoints;
+using Evently.Modules.Attendance.Infrastructure;
 using Evently.Modules.Events.Infrastructure;
 using Evently.Modules.Ticketing.Infrastructure;
 using Evently.Modules.Users.Infrastructure;
@@ -24,7 +25,8 @@ builder.Services.AddOpenApiDocumentation();
 builder.Services.AddApplication(
     Evently.Modules.Events.Application.AssemblyReference.Assembly,
     Evently.Modules.Users.Application.AssemblyReference.Assembly,
-    Evently.Modules.Ticketing.Application.AssemblyReference.Assembly);
+    Evently.Modules.Ticketing.Application.AssemblyReference.Assembly,
+    Evently.Modules.Attendance.Application.AssemblyReference.Assembly);
 
 string databaseConnectionString = builder.Configuration.GetConnectionString("Database")!;
 string redisConnectionString = builder.Configuration.GetConnectionString("Cache")!;
@@ -36,13 +38,15 @@ builder.Services.AddInfrastructure(
 builder.Services.AddEventsModule(builder.Configuration);
 builder.Services.AddUsersModule(builder.Configuration);
 builder.Services.AddTicketingModule(builder.Configuration);
+builder.Services.AddAttendanceModule(builder.Configuration);
 
-builder.Configuration.AddModuleConfiguration("events", "users", "ticketing");
+builder.Configuration.AddModuleConfiguration("events", "users", "ticketing", "attendance");
 
 builder.Services.AddEndpoints(
     Evently.Modules.Events.Presentation.AssemblyReference.Assembly,
     Evently.Modules.Users.Presentation.AssemblyReference.Assembly,
-    Evently.Modules.Ticketing.Presentation.AssemblyReference.Assembly);
+    Evently.Modules.Ticketing.Presentation.AssemblyReference.Assembly,
+    Evently.Modules.Attendance.Presentation.AssemblyReference.Assembly);
 
 builder.Services.AddHealthChecks()
     .AddNpgSql(databaseConnectionString)

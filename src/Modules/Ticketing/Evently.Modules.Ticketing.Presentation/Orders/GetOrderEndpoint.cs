@@ -22,7 +22,7 @@ internal sealed class GetOrderEndpoint : IEndpoint
             .RequireAuthorization(Permissions.GetOrders)
             .WithTags(Tags.Orders)
             .WithName("Get Order")
-            .Produces(StatusCodes.Status200OK)
+            .Produces<OrderResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Retrieves an order by its unique identifier")

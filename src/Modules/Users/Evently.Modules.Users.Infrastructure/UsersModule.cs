@@ -39,7 +39,7 @@ public static class UsersModule
 
         #endregion
 
-        #region User
+        #region Users
 
         services.AddScoped<IUserRepository, UserRepository>();
 

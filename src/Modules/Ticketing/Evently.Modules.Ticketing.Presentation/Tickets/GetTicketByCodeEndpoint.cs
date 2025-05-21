@@ -18,12 +18,12 @@ internal sealed class GetTicketByCodeEndpoint : IEndpoint
             {
                 Result<TicketResponse> result = await sender.Send(new GetTicketByCodeQuery(code));
 
-                return result.Match(Results.Ok<TicketResponse>, ApiResults.Problem);
+                return result.Match(Results.Ok, ApiResults.Problem);
             })
             .RequireAuthorization(Permissions.GetTickets)
             .WithTags(Tags.Tickets)
             .WithName("Get Ticket By Code")
-            .Produces(StatusCodes.Status200OK)
+            .Produces<TicketResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Retrieves a ticket by its unique code")

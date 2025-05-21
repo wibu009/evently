@@ -22,7 +22,7 @@ internal sealed class GetTicketEndpoint : IEndpoint
             .RequireAuthorization(Permissions.GetTickets)
             .WithTags(Tags.Tickets)
             .WithName("Get Ticket")
-            .Produces(StatusCodes.Status200OK)
+            .Produces<TicketResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Retrieves a ticket by its unique identifier")

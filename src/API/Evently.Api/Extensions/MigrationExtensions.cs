@@ -1,4 +1,5 @@
-﻿using Evently.Modules.Events.Infrastructure.Database;
+﻿using Evently.Modules.Attendance.Infrastructure.Database;
+using Evently.Modules.Events.Infrastructure.Database;
 using Evently.Modules.Ticketing.Infrastructure.Database;
 using Evently.Modules.Users.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +15,7 @@ internal static class MigrationExtensions
         ApplyMigration<EventsDbContext>(scope);
         ApplyMigration<UsersDbContext>(scope);
         ApplyMigration<TicketingDbContext>(scope);
+        ApplyMigration<AttendanceDbContext>(scope);
     }
 
     private static void ApplyMigration<TDbContext>(IServiceScope scope) where TDbContext : DbContext
