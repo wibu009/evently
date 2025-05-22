@@ -5,7 +5,7 @@ namespace Evently.Api.Extensions;
 
 internal static class OpenApiExtensions
 {
-    public static void AddOpenApiDocumentation(this IServiceCollection services)
+    internal static void AddOpenApiDocumentation(this IServiceCollection services)
     {
         services.AddOpenApi(options =>
         {

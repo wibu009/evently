@@ -1,3 +1,4 @@
+using System.Reflection;
 using Evently.Api.Extensions;
 using Evently.Api.Middleware;
 using Evently.Common.Application;
@@ -14,39 +15,44 @@ using Serilog;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-builder.Host.UseSerilog((context, loggerConfig)
-    => loggerConfig.ReadFrom.Configuration(context.Configuration));
+//Logging Setup
+builder.Host.UseSerilog((context, loggerConfig) => loggerConfig.ReadFrom.Configuration(context.Configuration));
 
-builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-builder.Services.AddProblemDetails();
-
-builder.Services.AddOpenApiDocumentation();
-
-builder.Services.AddApplication(
-    Evently.Modules.Events.Application.AssemblyReference.Assembly,
-    Evently.Modules.Users.Application.AssemblyReference.Assembly,
-    Evently.Modules.Ticketing.Application.AssemblyReference.Assembly,
-    Evently.Modules.Attendance.Application.AssemblyReference.Assembly);
+// Module Setup
+Assembly assemblyLoader = typeof(Program).Assembly;
 
 string databaseConnectionString = builder.Configuration.GetConnectionString("Database")!;
 string redisConnectionString = builder.Configuration.GetConnectionString("Cache")!;
+
+builder.Services.AddApplication(
+    assemblyLoader.GetModuleAssembly("Events", "Application"),
+    assemblyLoader.GetModuleAssembly("Users", "Application"),
+    assemblyLoader.GetModuleAssembly("Ticketing", "Application"),
+    assemblyLoader.GetModuleAssembly("Attendance", "Application"));
+
 builder.Services.AddInfrastructure(
     databaseConnectionString,
     redisConnectionString,
     [TicketingModule.ConfigureConsumers]);
+
+builder.Services.AddEndpoints(
+    assemblyLoader.GetModuleAssembly("Events", "Presentation"),
+    assemblyLoader.GetModuleAssembly("Users", "Presentation"),
+    assemblyLoader.GetModuleAssembly("Ticketing", "Presentation"),
+    assemblyLoader.GetModuleAssembly("Attendance", "Presentation"));
+
+builder.Configuration.AddModuleConfiguration("events", "users", "ticketing", "attendance");
 
 builder.Services.AddEventsModule(builder.Configuration);
 builder.Services.AddUsersModule(builder.Configuration);
 builder.Services.AddTicketingModule(builder.Configuration);
 builder.Services.AddAttendanceModule(builder.Configuration);
 
-builder.Configuration.AddModuleConfiguration("events", "users", "ticketing", "attendance");
+// Other Setup
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
-builder.Services.AddEndpoints(
-    Evently.Modules.Events.Presentation.AssemblyReference.Assembly,
-    Evently.Modules.Users.Presentation.AssemblyReference.Assembly,
-    Evently.Modules.Ticketing.Presentation.AssemblyReference.Assembly,
-    Evently.Modules.Attendance.Presentation.AssemblyReference.Assembly);
+builder.Services.AddOpenApiDocumentation();
 
 builder.Services.AddHealthChecks()
     .AddNpgSql(databaseConnectionString)
@@ -55,11 +61,12 @@ builder.Services.AddHealthChecks()
 
 WebApplication app = builder.Build();
 
+// Middleware pipeline
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
-
+    
     app.ApplyMigrations();
 }
 
@@ -75,7 +82,6 @@ app.UseSerilogRequestLogging();
 app.UseExceptionHandler();
 
 app.UseAuthentication();
-
 app.UseAuthorization();
 
 await app.RunAsync();
