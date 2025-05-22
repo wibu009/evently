@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\..\Common\Evently.Common.Infrastructure\Evently.Common.Infrastructure.csproj" />
+      <ProjectReference Include="..\Evently.Modules.Attendance.Application\Evently.Modules.Attendance.Application.csproj" />
+      <ProjectReference Include="..\Evently.Modules.Attendance.Presentation\Evently.Modules.Attendance.Presentation.csproj" />
+    </ItemGroup>
+
+</Project>

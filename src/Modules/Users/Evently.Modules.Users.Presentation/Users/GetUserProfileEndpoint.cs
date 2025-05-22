@@ -20,7 +20,7 @@ internal sealed class GetUserProfileEndpoint : IEndpoint
             })
             .RequireAuthorization(Permissions.GetUser)
             .WithTags(Tags.Users) .WithName("Get User Profile")
-            .Produces(StatusCodes.Status200OK)
+            .Produces<UserResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)

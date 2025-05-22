@@ -19,12 +19,12 @@ internal sealed class GetTicketsForOrderEndpoint : IEndpoint
                 Result<IReadOnlyList<TicketResponse>> result = await sender.Send(
                     new GetTicketsForOrderQuery(orderId));
 
-                return result.Match(Results.Ok<IReadOnlyList<TicketResponse>>, ApiResults.Problem);
+                return result.Match(Results.Ok, ApiResults.Problem);
             })
             .RequireAuthorization(Permissions.GetTickets)
             .WithTags(Tags.Tickets)
             .WithName("Get Tickets For Order")
-            .Produces(StatusCodes.Status200OK)
+            .Produces<IReadOnlyList<TicketResponse>>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Retrieves all tickets for a specific order")
