@@ -1,4 +1,8 @@
-﻿using Evently.Common.Infrastructure.Interceptors;
+﻿using System.Reflection;
+using Evently.Common.Application;
+using Evently.Common.Infrastructure;
+using Evently.Common.Infrastructure.Interceptors;
+using Evently.Common.Presentation.Endpoints;
 using Evently.Modules.Ticketing.Application.Abstractions.Data;
 using Evently.Modules.Ticketing.Application.Abstractions.Payments;
 using Evently.Modules.Ticketing.Application.Carts;
@@ -24,18 +28,19 @@ namespace Evently.Modules.Ticketing.Infrastructure;
 
 public static class TicketingModule
 {
-    public static void AddTicketingModule( this IServiceCollection services, IConfiguration configuration)
+    private static readonly Assembly CurrentAssembly = typeof(TicketingModule).Assembly;
+    
+    public static void AddTicketingModule(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddApplication();
         services.AddInfrastructure(configuration);
-    }
-
-    public static void ConfigureConsumers(IRegistrationConfigurator registrationConfigurator)
-    {
-        registrationConfigurator.AddConsumer<UserRegisteredIntegrationEventConsumer>();
+        services.AddPresentation();
     }
     
     private static void AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        #region Database
+
         string databaseConnectionString = configuration.GetConnectionString("Database")!;
         
         services.AddDbContext<TicketingDbContext>((sp, options) => options
@@ -46,16 +51,56 @@ public static class TicketingModule
             .UseSnakeCaseNamingConvention()
             .AddInterceptors(sp.GetRequiredService<PublishDomainEventsInterceptor>()));
         
+        services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<TicketingDbContext>());
+
+        #endregion
+
+        #region Customer
+
         services.AddScoped<ICustomerRepository, CustomerRepository>();
+
+        #endregion
+
+        #region Events
+
         services.AddScoped<IEventRepository, EventRepository>();
         services.AddScoped<ITicketTypeRepository, TicketTypeRepository>();
-        services.AddScoped<IOrderRepository, OrderRepository>();
-        services.AddScoped<ITicketRepository, TicketRepository>();
-        services.AddScoped<IPaymentRepository, PaymentRepository>();
+
+        #endregion
+
+        #region Tickets
         
-        services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<TicketingDbContext>());
+        services.AddScoped<ITicketRepository, TicketRepository>();
+        
+        #endregion
+
+        #region Orders
+
+        services.AddScoped<IOrderRepository, OrderRepository>();
+
+        #endregion
+        
+        #region Payments
+        
+        services.AddScoped<IPaymentRepository, PaymentRepository>();
+        services.AddSingleton<IPaymentService, PaymentService>();
+        
+        #endregion
+        
+        #region Cart
         
         services.AddSingleton<CartService>();
-        services.AddSingleton<IPaymentService, PaymentService>();
+        
+        #endregion
+    }
+    
+    private static void AddApplication(this IServiceCollection services)
+    {
+        services.AddApplicationFromAssembly(CurrentAssembly.GetLayerAssembly("Application"));
+    }
+
+    private static void AddPresentation(this IServiceCollection services)
+    {
+        services.AddEndpointsFromAssembly(CurrentAssembly.GetLayerAssembly("Presentation"));
     }
 }

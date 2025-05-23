@@ -1,7 +1,5 @@
-using System.Reflection;
 using Evently.Api.Extensions;
 using Evently.Api.Middleware;
-using Evently.Common.Application;
 using Evently.Common.Infrastructure;
 using Evently.Common.Presentation.Endpoints;
 using Evently.Modules.Attendance.Infrastructure;
@@ -19,27 +17,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((context, loggerConfig) => loggerConfig.ReadFrom.Configuration(context.Configuration));
 
 // Module Setup
-Assembly assemblyLoader = typeof(Program).Assembly;
-
-string databaseConnectionString = builder.Configuration.GetConnectionString("Database")!;
-string redisConnectionString = builder.Configuration.GetConnectionString("Cache")!;
-
-builder.Services.AddApplication(
-    assemblyLoader.GetModuleAssembly("Events", "Application"),
-    assemblyLoader.GetModuleAssembly("Users", "Application"),
-    assemblyLoader.GetModuleAssembly("Ticketing", "Application"),
-    assemblyLoader.GetModuleAssembly("Attendance", "Application"));
-
-builder.Services.AddInfrastructure(
-    databaseConnectionString,
-    redisConnectionString,
-    [TicketingModule.ConfigureConsumers]);
-
-builder.Services.AddEndpoints(
-    assemblyLoader.GetModuleAssembly("Events", "Presentation"),
-    assemblyLoader.GetModuleAssembly("Users", "Presentation"),
-    assemblyLoader.GetModuleAssembly("Ticketing", "Presentation"),
-    assemblyLoader.GetModuleAssembly("Attendance", "Presentation"));
+builder.Services.AddInfrastructureKit(builder.Configuration);
 
 builder.Configuration.AddModuleConfiguration("events", "users", "ticketing", "attendance");
 
@@ -55,8 +33,8 @@ builder.Services.AddProblemDetails();
 builder.Services.AddOpenApiDocumentation();
 
 builder.Services.AddHealthChecks()
-    .AddNpgSql(databaseConnectionString)
-    .AddRedis(redisConnectionString)
+    .AddNpgSql(builder.Configuration.GetConnectionString("Database")!)
+    .AddRedis(builder.Configuration.GetConnectionString("Cache")!)
     .AddUrlGroup(new Uri(builder.Configuration.GetValue<string>("KeyCloak:HealthUrl")!), HttpMethod.Get, "keycloak");
 
 WebApplication app = builder.Build();
