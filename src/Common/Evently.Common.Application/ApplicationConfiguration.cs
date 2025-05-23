@@ -7,20 +7,18 @@ namespace Evently.Common.Application;
 
 public static class ApplicationConfiguration
 {
-    public static void AddApplication(
-        this IServiceCollection services,
-        params Assembly[] moduleAssemblies)
+    public static void AddApplicationFromAssembly(this IServiceCollection services, Assembly moduleAssembly)
     {
         services.AddMediatR(config =>
         {
-            config.RegisterServicesFromAssemblies(moduleAssemblies);
+            config.RegisterServicesFromAssembly(moduleAssembly);
 
             config.AddOpenBehavior(typeof(ExceptionHandlingPipelineBehavior<,>));
             config.AddOpenBehavior(typeof(RequestLoggingPipelineBehavior<,>));
             config.AddOpenBehavior(typeof(ValidationPipelineBehavior<,>));
             config.AddOpenBehavior(typeof(QueryCachingPipelineBehavior<,>));
         });
-        
-        services.AddValidatorsFromAssemblies(moduleAssemblies, includeInternalTypes: true);
+
+        services.AddValidatorsFromAssembly(moduleAssembly, includeInternalTypes: true);
     }
 }

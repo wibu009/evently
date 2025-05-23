@@ -1,4 +1,8 @@
-﻿using Evently.Common.Infrastructure.Interceptors;
+﻿using System.Reflection;
+using Evently.Common.Application;
+using Evently.Common.Infrastructure;
+using Evently.Common.Infrastructure.Interceptors;
+using Evently.Common.Presentation.Endpoints;
 using Evently.Modules.Events.Application.Abstractions.Data;
 using Evently.Modules.Events.Domain.Categories;
 using Evently.Modules.Events.Domain.Events;
@@ -16,9 +20,13 @@ namespace Evently.Modules.Events.Infrastructure;
 
 public static class EventsModule
 {
+    private static readonly Assembly CurrentAssembly = typeof(EventsModule).Assembly;
+    
     public static void AddEventsModule( this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddApplication();
         services.AddInfrastructure(configuration);
+        services.AddPresentation();
     }
 
     private static void AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
@@ -38,5 +46,15 @@ public static class EventsModule
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<EventsDbContext>());
+    }
+    
+    private static void AddApplication(this IServiceCollection services)
+    {
+        services.AddApplicationFromAssembly(CurrentAssembly.GetLayerAssembly("Application"));
+    }
+
+    private static void AddPresentation(this IServiceCollection services)
+    {
+        services.AddEndpointsFromAssembly(CurrentAssembly.GetLayerAssembly("Presentation"));
     }
 }

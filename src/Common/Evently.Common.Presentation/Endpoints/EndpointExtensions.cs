@@ -8,15 +8,15 @@ namespace Evently.Common.Presentation.Endpoints;
 
 public static class EndpointExtensions
 {
-    public static void AddEndpoints(this IServiceCollection services, params Assembly[] assemblies)
-    { 
-        ServiceDescriptor[] serviceDescriptors = assemblies
-            .SelectMany(a => a.GetTypes())
+    public static void AddEndpointsFromAssembly(this IServiceCollection services, Assembly assembly)
+    {
+        ServiceDescriptor[] serviceDescriptors = assembly
+            .GetTypes()
             .Where(type => type is { IsAbstract: false, IsInterface: false } &&
                            type.IsAssignableTo(typeof(IEndpoint)))
             .Select(type => ServiceDescriptor.Transient(typeof(IEndpoint), type))
             .ToArray();
-        
+
         services.TryAddEnumerable(serviceDescriptors);
     }
 
