@@ -7,7 +7,7 @@ using Evently.Modules.Ticketing.Domain.Payments;
 
 namespace Evently.Modules.Ticketing.Application.Payments.RefundPaymentsForEvent;
 
-public sealed class RefundPaymentsForEventCommandHandler(
+internal sealed class RefundPaymentsForEventCommandHandler(
     IEventRepository eventRepository,
     IPaymentRepository paymentRepository,
     IUnitOfWork unitOfWork)

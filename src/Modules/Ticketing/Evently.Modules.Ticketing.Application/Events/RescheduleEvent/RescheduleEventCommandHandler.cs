@@ -6,7 +6,7 @@ using Evently.Modules.Ticketing.Domain.Events;
 
 namespace Evently.Modules.Ticketing.Application.Events.RescheduleEvent;
 
-public sealed class RescheduleEventCommandHandler(
+internal sealed class RescheduleEventCommandHandler(
     IDateTimeProvider dateTimeProvider,
     IEventRepository eventRepository,
     IUnitOfWork unitOfWork)
