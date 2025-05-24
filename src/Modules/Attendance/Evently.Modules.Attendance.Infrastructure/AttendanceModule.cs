@@ -22,7 +22,9 @@ public static class AttendanceModule
 {
     public static void AddAttendanceModule(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddApplication();
         services.AddInfrastructure(configuration);
+        services.AddPresentation();
     }
 
     private static void AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
