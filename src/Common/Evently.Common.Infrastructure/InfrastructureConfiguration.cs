@@ -21,7 +21,7 @@ namespace Evently.Common.Infrastructure;
 
 public static class InfrastructureConfiguration
 {
-    public static void AddInfrastructureKit(
+    public static void AddCoreServices(
         this IServiceCollection services,
         IConfiguration configuration)
     {
@@ -75,33 +75,6 @@ public static class InfrastructureConfiguration
 
         services.AddMassTransit(configure =>
         {
-            string executingAssemblyPath = Assembly.GetExecutingAssembly().Location;
-            string? directory = Path.GetDirectoryName(executingAssemblyPath);
-        
-            if (directory == null)
-            {
-                throw new InvalidOperationException("Could not determine assembly directory.");
-            }
-            
-            var consumerAssemblies = Directory
-                .GetFiles(directory, "Evently.Modules.*.Presentation.dll")
-                .Select(AssemblyLoadContext.Default.LoadFromAssemblyPath)
-                .ToList();
-            
-            foreach (Assembly assembly in consumerAssemblies)
-            {
-                IEnumerable<Type> consumerTypes = assembly
-                    .GetTypes()
-                    .Where(type => type is { IsAbstract: false, IsInterface: false } &&
-                                   type.GetInterfaces().Any(i => i.IsGenericType &&
-                                                                 i.GetGenericTypeDefinition() == typeof(IConsumer<>)));
-
-                foreach (Type consumerType in consumerTypes)
-                {
-                    configure.AddConsumer(consumerType);
-                }
-            }
-
             configure.UsingInMemory((context, cfg) =>
             {
                 cfg.ConfigureEndpoints(context);
@@ -123,38 +96,5 @@ public static class InfrastructureConfiguration
         services.AddAuthorizationInternal();
 
         #endregion
-    }
-    
-    public static Assembly GetLayerAssembly(this Assembly source, string layerName)
-    {
-        string? moduleName = source.GetName().Name?.Split('.').Skip(2).FirstOrDefault();
-        if (string.IsNullOrEmpty(moduleName))
-        {
-            throw new InvalidOperationException("Could not determine module name from source assembly.");
-        }
-
-        string assemblyName = $"Evently.Modules.{moduleName}.{layerName}";
-        string executingAssemblyPath = source.Location;
-        string? directory = Path.GetDirectoryName(executingAssemblyPath);
-
-        if (directory == null)
-        {
-            throw new InvalidOperationException($"Assembly {assemblyName} not found.");
-        }
-
-        string dllPath = Path.Combine(directory, $"{assemblyName}.dll");
-        if (!File.Exists(dllPath))
-        {
-            throw new InvalidOperationException($"Assembly {assemblyName} not found.");
-        }
-
-        try
-        {
-            return AssemblyLoadContext.Default.LoadFromAssemblyPath(dllPath);
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException($"Failed to load assembly {assemblyName} from {dllPath}: {ex.Message}");
-        }
     }
 }

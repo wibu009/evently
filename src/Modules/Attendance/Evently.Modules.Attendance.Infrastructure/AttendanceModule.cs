@@ -1,4 +1,8 @@
-﻿using Evently.Common.Infrastructure.Interceptors;
+﻿using System.Reflection;
+using System.Runtime.Loader;
+using Evently.Common.Application;
+using Evently.Common.Infrastructure.Interceptors;
+using Evently.Common.Presentation.Endpoints;
 using Evently.Modules.Attendance.Application.Abstractions.Data;
 using Evently.Modules.Attendance.Domain.Attendees;
 using Evently.Modules.Attendance.Domain.Events;
@@ -55,5 +59,23 @@ public static class AttendanceModule
         services.AddScoped<ITicketRepository, TicketRepository>();
 
         #endregion
+    }
+    
+    private static void AddApplication(this IServiceCollection services)
+    {
+        services.AddApplicationFromAssembly(GetAssembly("Application"));
+    }
+    
+    private static void AddPresentation(this IServiceCollection services)
+    {
+        services.AddEndpointsFromAssembly(GetAssembly("Presentation"));
+    }
+    
+    private static Assembly GetAssembly(string layer)
+    {
+        string dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
+        string path = Path.Combine(dir, $"Evently.Modules.Attendance.{layer}.dll");
+
+        return AssemblyLoadContext.Default.LoadFromAssemblyPath(path);
     }
 }

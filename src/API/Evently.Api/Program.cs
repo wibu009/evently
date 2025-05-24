@@ -17,7 +17,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((context, loggerConfig) => loggerConfig.ReadFrom.Configuration(context.Configuration));
 
 // Module Setup
-builder.Services.AddInfrastructureKit(builder.Configuration);
+builder.Services.AddCoreServices(builder.Configuration);
 
 builder.Configuration.AddModuleConfiguration("events", "users", "ticketing", "attendance");
 

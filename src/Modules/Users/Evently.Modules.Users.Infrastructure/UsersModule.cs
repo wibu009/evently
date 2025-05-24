@@ -22,8 +22,6 @@ namespace Evently.Modules.Users.Infrastructure;
 
 public static class UsersModule
 {
-    private static readonly Assembly CurrentAssembly = typeof(UsersModule).Assembly;
-    
     public static void AddUsersModule( this IServiceCollection services, IConfiguration configuration)
     {
         services.AddApplication();
@@ -80,11 +78,19 @@ public static class UsersModule
 
     private static void AddApplication(this IServiceCollection services)
     {
-        services.AddApplicationFromAssembly(CurrentAssembly.GetLayerAssembly("Application"));
+        services.AddApplicationFromAssembly(GetAssembly("Application"));
     }
 
     private static void AddPresentation(this IServiceCollection services)
     {
-        services.AddEndpointsFromAssembly(CurrentAssembly.GetLayerAssembly("Presentation"));
+        services.AddEndpointsFromAssembly(GetAssembly("Presentation"));
+    }
+    
+    private static Assembly GetAssembly(string layer)
+    {
+        string dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
+        string path = Path.Combine(dir, $"Evently.Modules.Users.{layer}.dll");
+
+        return AssemblyLoadContext.Default.LoadFromAssemblyPath(path);
     }
 }

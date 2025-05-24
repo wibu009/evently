@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.Loader;
 using Evently.Common.Application;
 using Evently.Common.Infrastructure;
 using Evently.Common.Infrastructure.Interceptors;
@@ -20,8 +21,6 @@ namespace Evently.Modules.Events.Infrastructure;
 
 public static class EventsModule
 {
-    private static readonly Assembly CurrentAssembly = typeof(EventsModule).Assembly;
-    
     public static void AddEventsModule( this IServiceCollection services, IConfiguration configuration)
     {
         services.AddApplication();
@@ -50,11 +49,19 @@ public static class EventsModule
     
     private static void AddApplication(this IServiceCollection services)
     {
-        services.AddApplicationFromAssembly(CurrentAssembly.GetLayerAssembly("Application"));
+        services.AddApplicationFromAssembly(GetAssembly("Application"));
     }
 
     private static void AddPresentation(this IServiceCollection services)
     {
-        services.AddEndpointsFromAssembly(CurrentAssembly.GetLayerAssembly("Presentation"));
+        services.AddEndpointsFromAssembly(GetAssembly("Presentation"));
+    }
+    
+    private static Assembly GetAssembly(string layer)
+    {
+        string dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
+        string path = Path.Combine(dir, $"Evently.Modules.Events.{layer}.dll");
+
+        return AssemblyLoadContext.Default.LoadFromAssemblyPath(path);
     }
 }
