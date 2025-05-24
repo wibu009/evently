@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.Loader;
 using Evently.Common.Application;
 using Evently.Common.Infrastructure;
 using Evently.Common.Infrastructure.Interceptors;
@@ -18,7 +19,7 @@ using Evently.Modules.Ticketing.Infrastructure.Orders;
 using Evently.Modules.Ticketing.Infrastructure.Payments;
 using Evently.Modules.Ticketing.Infrastructure.Tickets;
 using Evently.Modules.Ticketing.Presentation.Customers;
-using MassTransit;
+using MassTransit.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
@@ -28,8 +29,6 @@ namespace Evently.Modules.Ticketing.Infrastructure;
 
 public static class TicketingModule
 {
-    private static readonly Assembly CurrentAssembly = typeof(TicketingModule).Assembly;
-    
     public static void AddTicketingModule(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddApplication();
@@ -96,11 +95,29 @@ public static class TicketingModule
     
     private static void AddApplication(this IServiceCollection services)
     {
-        services.AddApplicationFromAssembly(CurrentAssembly.GetLayerAssembly("Application"));
+        services.AddApplicationFromAssembly(GetAssembly("Application"));
     }
 
     private static void AddPresentation(this IServiceCollection services)
     {
-        services.AddEndpointsFromAssembly(CurrentAssembly.GetLayerAssembly("Presentation"));
+        #region Endpoints
+        
+        services.AddEndpointsFromAssembly(GetAssembly("Presentation"));
+        
+        #endregion
+
+        #region Consumers
+
+        services.RegisterConsumer<UserRegisteredIntegrationEventConsumer>();
+
+        #endregion
+    }
+    
+    private static Assembly GetAssembly(string layer)
+    {
+        string dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
+        string path = Path.Combine(dir, $"Evently.Modules.Ticketing.{layer}.dll");
+
+        return AssemblyLoadContext.Default.LoadFromAssemblyPath(path);
     }
 }
