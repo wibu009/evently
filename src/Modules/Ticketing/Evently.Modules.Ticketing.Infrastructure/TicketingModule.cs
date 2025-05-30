@@ -1,8 +1,9 @@
 ﻿using System.Reflection;
 using System.Runtime.Loader;
 using Evently.Common.Application;
-using Evently.Common.Infrastructure;
-using Evently.Common.Infrastructure.Interceptors;
+using Evently.Common.Application.Messaging;
+using Evently.Common.Infrastructure.Configuration;
+using Evently.Common.Infrastructure.Outbox;
 using Evently.Common.Presentation.Endpoints;
 using Evently.Modules.Ticketing.Application.Abstractions.Data;
 using Evently.Modules.Ticketing.Application.Abstractions.Payments;
@@ -16,14 +17,18 @@ using Evently.Modules.Ticketing.Infrastructure.Customers;
 using Evently.Modules.Ticketing.Infrastructure.Database;
 using Evently.Modules.Ticketing.Infrastructure.Events;
 using Evently.Modules.Ticketing.Infrastructure.Orders;
+using Evently.Modules.Ticketing.Infrastructure.Outbox;
 using Evently.Modules.Ticketing.Infrastructure.Payments;
 using Evently.Modules.Ticketing.Infrastructure.Tickets;
 using Evently.Modules.Ticketing.Presentation.Customers;
+using Evently.Modules.Ticketing.Presentation.Events;
+using Evently.Modules.Ticketing.Presentation.TicketTypes;
 using MassTransit.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Evently.Modules.Ticketing.Infrastructure;
 
@@ -40,7 +45,7 @@ public static class TicketingModule
     {
         #region Database
 
-        string databaseConnectionString = configuration.GetConnectionString("Database")!;
+        string databaseConnectionString = configuration.GetConnectionStringOrThrow("Database");
         
         services.AddDbContext<TicketingDbContext>((sp, options) => options
             .UseNpgsql(
@@ -48,7 +53,7 @@ public static class TicketingModule
                 npgsqlOptionsAction => npgsqlOptionsAction
                     .MigrationsHistoryTable(HistoryRepository.DefaultTableName, Schemas.Ticketing))
             .UseSnakeCaseNamingConvention()
-            .AddInterceptors(sp.GetRequiredService<PublishDomainEventsInterceptor>()));
+            .AddInterceptors(sp.GetRequiredService<InsertOutboxMessagesInterceptor>()));
         
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<TicketingDbContext>());
 
@@ -91,33 +96,61 @@ public static class TicketingModule
         services.AddSingleton<CartService>();
         
         #endregion
+
+        #region Outbox
+
+        services.Configure<OutboxOptions>(configuration.GetSection("Ticketing:Outbox"));
+        services.ConfigureOptions<ConfigureProcessOutboxJob>();
+
+        #endregion
     }
-    
+
     private static void AddApplication(this IServiceCollection services)
     {
-        services.AddApplicationFromAssembly(GetAssembly("Application"));
+        var applicationAssembly = Assembly.Load("Evently.Modules.Ticketing.Application");
+
+        services.AddApplicationFromAssembly(applicationAssembly);
+
+        Type[] domainEventHandlers = applicationAssembly
+            .GetTypes()
+            .Where(t => t.IsAssignableTo(typeof(IDomainEventHandler)))
+            .ToArray();
+        foreach (Type domainEventHandler in domainEventHandlers)
+        {
+            services.TryAddScoped(domainEventHandler);
+
+            Type domainEvent = domainEventHandler
+                .GetInterfaces()
+                .Single(i => i.IsGenericType)
+                .GetGenericArguments()
+                .Single();
+
+            Type closedIdempotentHandler = typeof(IdempotentDomainEventHandler<>).MakeGenericType(domainEvent);
+
+            services.Decorate(domainEventHandler, closedIdempotentHandler);
+        }
     }
 
     private static void AddPresentation(this IServiceCollection services)
     {
         #region Endpoints
         
-        services.AddEndpointsFromAssembly(GetAssembly("Presentation"));
+        services.AddEndpointsFromAssembly(Assembly.Load("Evently.Modules.Ticketing.Presentation"));
         
         #endregion
 
         #region Consumers
 
+        //Customers
         services.RegisterConsumer<UserRegisteredIntegrationEventConsumer>();
+        services.RegisterConsumer<UserProfileUpdatedIntegrationEventConsumer>();
+        
+        //Events
+        services.RegisterConsumer<EventPublishedIntegrationEventConsumer>();
+        
+        //Ticket Types
+        services.RegisterConsumer<TicketTypePriceChangedIntegrationEventConsumer>();
 
         #endregion
-    }
-    
-    private static Assembly GetAssembly(string layer)
-    {
-        string dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
-        string path = Path.Combine(dir, $"Evently.Modules.Ticketing.{layer}.dll");
-
-        return AssemblyLoadContext.Default.LoadFromAssemblyPath(path);
     }
 }

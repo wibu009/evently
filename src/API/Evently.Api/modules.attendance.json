@@ -1,3 +1,8 @@
 ﻿{
-  "Attendance": {}
+  "Attendance": {
+    "Outbox": {
+      "IntervalInSeconds": 5,
+      "BatchSize": 50
+    }
+  }
 }

@@ -6,5 +6,5 @@ public sealed record OrderItemResponse(
     Guid TicketTypeId,
     decimal Quantity,
     decimal UnitPrice,
-    string Price,
+    decimal Price,
     string Currency);
