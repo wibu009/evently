@@ -8,15 +8,17 @@ namespace Evently.Common.Infrastructure.Outbox;
 
 public sealed class InsertOutboxMessagesInterceptor : SaveChangesInterceptor
 {
-    public override ValueTask<int> SavedChangesAsync(SaveChangesCompletedEventData eventData, int result,
-        CancellationToken cancellationToken = new())
+    public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
+        DbContextEventData eventData,
+        InterceptionResult<int> result,
+        CancellationToken cancellationToken = default)
     {
         if (eventData.Context is not null)
         {
             InsertOutboxMessages(eventData.Context);
         }
-        
-        return base.SavedChangesAsync(eventData, result, cancellationToken);
+
+        return await base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 
     private static void InsertOutboxMessages(DbContext context)

@@ -50,7 +50,7 @@ public static class InfrastructureConfiguration
 
         #region Caching
 
-        string redisConnectionString = configuration.GetConnectionStringOrThrow("Redis");
+        string redisConnectionString = configuration.GetConnectionStringOrThrow("Cache");
 
         try
         {

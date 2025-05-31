@@ -13,6 +13,10 @@ using Evently.Modules.Attendance.Infrastructure.Database;
 using Evently.Modules.Attendance.Infrastructure.Events;
 using Evently.Modules.Attendance.Infrastructure.Outbox;
 using Evently.Modules.Attendance.Infrastructure.Tickets;
+using Evently.Modules.Attendance.Presentation.Attendees;
+using Evently.Modules.Attendance.Presentation.Events;
+using Evently.Modules.Attendance.Presentation.Tickets;
+using MassTransit.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
@@ -75,7 +79,7 @@ public static class AttendanceModule
     
     private static void AddApplication(this IServiceCollection services)
     {
-        var applicationAssembly = Assembly.Load("Evently.Modules.Events.Application");
+        var applicationAssembly = Assembly.Load("Evently.Modules.Attendance.Application");
             
         services.AddApplicationFromAssembly(applicationAssembly);
 
@@ -101,6 +105,24 @@ public static class AttendanceModule
     
     private static void AddPresentation(this IServiceCollection services)
     {
+        #region Endpoints
+
         services.AddEndpointsFromAssembly(Assembly.Load("Evently.Modules.Attendance.Presentation"));
+
+        #endregion
+
+        #region Consumers
+
+        // Attendees
+        services.RegisterConsumer<UserProfileUpdatedIntegrationEventConsumer>();
+        services.RegisterConsumer<UserRegisteredIntegrationEventConsumer>();
+        
+        // Events
+        services.RegisterConsumer<EventPublishedIntegrationEventConsumer>();
+        
+        // Tickets
+        services.RegisterConsumer<TicketIssuedIntegrationEventConsumer>();
+
+        #endregion
     }
 }
