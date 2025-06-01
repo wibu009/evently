@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using Evently.Common.Application;
 using Evently.Common.Application.Authorization;
+using Evently.Common.Application.EventBus;
 using Evently.Common.Application.Messaging;
 using Evently.Common.Infrastructure.Configuration;
 using Evently.Common.Infrastructure.Outbox;
@@ -11,6 +12,7 @@ using Evently.Modules.Users.Domain.Users;
 using Evently.Modules.Users.Infrastructure.Authorization;
 using Evently.Modules.Users.Infrastructure.Database;
 using Evently.Modules.Users.Infrastructure.Identity;
+using Evently.Modules.Users.Infrastructure.Inbox;
 using Evently.Modules.Users.Infrastructure.Outbox;
 using Evently.Modules.Users.Infrastructure.Users;
 using Microsoft.EntityFrameworkCore;
@@ -83,6 +85,13 @@ public static class UsersModule
         services.ConfigureOptions<ConfigureProcessOutboxJob>();
 
         #endregion
+
+        #region Inbox
+        
+        services.Configure<InboxOptions>(configuration.GetSection("Users:Inbox"));
+        services.ConfigureOptions<ConfigureProcessInboxJob>();
+
+        #endregion
     }
 
     private static void AddApplication(this IServiceCollection services)
@@ -91,10 +100,9 @@ public static class UsersModule
             
         services.AddApplicationFromAssembly(applicationAssembly);
 
-        Type[] domainEventHandlers = applicationAssembly
+        Type[] domainEventHandlers = [.. applicationAssembly
             .GetTypes()
-            .Where(t => t.IsAssignableTo(typeof(IDomainEventHandler)))
-            .ToArray();
+            .Where(t => t.IsAssignableTo(typeof(IDomainEventHandler)))];
         foreach (Type domainEventHandler in domainEventHandlers)
         {
             services.TryAddScoped(domainEventHandler);
@@ -111,9 +119,34 @@ public static class UsersModule
         }
     }
 
+
     private static void AddPresentation(this IServiceCollection services)
     {
-        services.AddEndpointsFromAssembly(
-            Assembly.Load("Evently.Modules.Users.Presentation"));
+        var presentationAssembly = Assembly.Load("Evently.Modules.Users.Presentation");
+
+        #region Endpoints
+
+        services.AddEndpointsFromAssembly(presentationAssembly);
+
+        #endregion
+        
+        Type[] integrationEventHandlers = [.. presentationAssembly
+            .GetTypes()
+            .Where(t => t.IsAssignableTo(typeof(IIntegrationEventHandler)))];
+        foreach (Type integrationEventHandler in integrationEventHandlers)
+        {
+            services.TryAddScoped(integrationEventHandler);
+
+            Type integrationEvent = integrationEventHandler
+                .GetInterfaces()
+                .Single(i => i.IsGenericType)
+                .GetGenericArguments()
+                .Single();
+
+            Type closedIdempotentHandler =
+                typeof(IdempotentIntegrationEventHandler<>).MakeGenericType(integrationEvent);
+
+            services.Decorate(integrationEventHandler, closedIdempotentHandler);
+        }
     }
 }
