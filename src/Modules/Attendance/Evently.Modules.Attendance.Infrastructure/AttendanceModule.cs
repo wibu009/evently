@@ -1,7 +1,9 @@
 ﻿using System.Reflection;
-using System.Runtime.Loader;
 using Evently.Common.Application;
-using Evently.Common.Infrastructure.Interceptors;
+using Evently.Common.Application.EventBus;
+using Evently.Common.Application.Messaging;
+using Evently.Common.Infrastructure.Configuration;
+using Evently.Common.Infrastructure.Outbox;
 using Evently.Common.Presentation.Endpoints;
 using Evently.Modules.Attendance.Application.Abstractions.Data;
 using Evently.Modules.Attendance.Domain.Attendees;
@@ -10,11 +12,18 @@ using Evently.Modules.Attendance.Domain.Tickets;
 using Evently.Modules.Attendance.Infrastructure.Attendees;
 using Evently.Modules.Attendance.Infrastructure.Database;
 using Evently.Modules.Attendance.Infrastructure.Events;
+using Evently.Modules.Attendance.Infrastructure.Inbox;
+using Evently.Modules.Attendance.Infrastructure.Outbox;
 using Evently.Modules.Attendance.Infrastructure.Tickets;
+using Evently.Modules.Events.IntegrationEvents;
+using Evently.Modules.Ticketing.IntegrationEvents;
+using Evently.Modules.Users.IntegrationEvents;
+using MassTransit.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Evently.Modules.Attendance.Infrastructure;
 
@@ -34,11 +43,11 @@ public static class AttendanceModule
         services.AddDbContext<AttendanceDbContext>((sp, options) =>
             options
                 .UseNpgsql(
-                    configuration.GetConnectionString("Database"),
+                    configuration.GetConnectionStringOrThrow("Database"),
                     npgsqlOptions => npgsqlOptions
                         .MigrationsHistoryTable(HistoryRepository.DefaultTableName, Schemas.Attendance))
                 .UseSnakeCaseNamingConvention()
-                .AddInterceptors(sp.GetRequiredService<PublishDomainEventsInterceptor>()));
+                .AddInterceptors(sp.GetRequiredService<InsertOutboxMessagesInterceptor>()));
         
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<AttendanceDbContext>());
 
@@ -61,23 +70,88 @@ public static class AttendanceModule
         services.AddScoped<ITicketRepository, TicketRepository>();
 
         #endregion
+
+        #region Outbox
+
+        services.Configure<OutboxOptions>(configuration.GetSection("Attendance:Outbox"));
+        services.ConfigureOptions<ConfigureProcessOutboxJob>();
+
+        #endregion
+        
+        #region Inbox
+
+        services.Configure<InboxOptions>(configuration.GetSection("Attendance:Inbox"));
+        services.ConfigureOptions<ConfigureProcessInboxJob>();
+
+        #endregion
     }
     
     private static void AddApplication(this IServiceCollection services)
     {
-        services.AddApplicationFromAssembly(GetAssembly("Application"));
+        var applicationAssembly = Assembly.Load("Evently.Modules.Attendance.Application");
+            
+        services.AddApplicationFromAssembly(applicationAssembly);
+
+        Type[] domainEventHandlers = [.. applicationAssembly
+            .GetTypes()
+            .Where(t => t.IsAssignableTo(typeof(IDomainEventHandler)))];
+        foreach (Type domainEventHandler in domainEventHandlers)
+        {
+            services.TryAddScoped(domainEventHandler);
+
+            Type domainEvent = domainEventHandler
+                .GetInterfaces()
+                .Single(i => i.IsGenericType)
+                .GetGenericArguments()
+                .Single();
+
+            Type closedIdempotentHandler = typeof(IdempotentDomainEventHandler<>).MakeGenericType(domainEvent);
+
+            services.Decorate(domainEventHandler, closedIdempotentHandler);
+        }
     }
     
     private static void AddPresentation(this IServiceCollection services)
     {
-        services.AddEndpointsFromAssembly(GetAssembly("Presentation"));
-    }
-    
-    private static Assembly GetAssembly(string layer)
-    {
-        string dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
-        string path = Path.Combine(dir, $"Evently.Modules.Attendance.{layer}.dll");
+        var presentationAssembly = Assembly.Load("Evently.Modules.Attendance.Presentation");
+        
+        #region Endpoints
 
-        return AssemblyLoadContext.Default.LoadFromAssemblyPath(path);
+        services.AddEndpointsFromAssembly(presentationAssembly);
+
+        #endregion
+
+        #region Consumers
+
+        // Attendees
+        services.RegisterConsumer<IntegrationEventConsumer<UserRegisteredIntegrationEvent>>();
+        services.RegisterConsumer<IntegrationEventConsumer<UserProfileUpdatedIntegrationEvent>>();
+        
+        // Events
+        services.RegisterConsumer<IntegrationEventConsumer<EventPublishedIntegrationEvent>>();
+        
+        // Tickets
+        services.RegisterConsumer<IntegrationEventConsumer<TicketIssuedIntegrationEvent>>();
+
+        #endregion
+        
+        Type[] integrationEventHandlers = [.. presentationAssembly
+            .GetTypes()
+            .Where(t => t.IsAssignableTo(typeof(IIntegrationEventHandler)))];
+        foreach (Type integrationEventHandler in integrationEventHandlers)
+        {
+            services.TryAddScoped(integrationEventHandler);
+
+            Type integrationEvent = integrationEventHandler
+                .GetInterfaces()
+                .Single(i => i.IsGenericType)
+                .GetGenericArguments()
+                .Single();
+
+            Type closedIdempotentHandler =
+                typeof(IdempotentIntegrationEventHandler<>).MakeGenericType(integrationEvent);
+
+            services.Decorate(integrationEventHandler, closedIdempotentHandler);
+        }
     }
 }

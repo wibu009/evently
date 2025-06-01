@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Routing;
 
 namespace Evently.Modules.Attendance.Presentation.Attendees;
 
-public class CheckInAttendeeEndpoint : IEndpoint
+internal sealed class CheckInAttendeeEndpoint : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {

@@ -20,7 +20,8 @@ internal sealed class GetCurrentUserProfileEndpoint : IEndpoint
                 return result.Match(Results.Ok, ApiResults.Problem);
             })
             .RequireAuthorization(Permissions.GetUser)
-            .WithTags(Tags.Users) .WithName("Get Current User Profile")
+            .WithTags(Tags.Users)
+            .WithName("Get Current User Profile")
             .Produces<UserResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound)

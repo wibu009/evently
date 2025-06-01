@@ -8,6 +8,9 @@
       <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.5" />
       <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" Version="9.4.0" />
       <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="9.0.5" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+      <PackageReference Include="Quartz.Extensions.Hosting" Version="3.14.0" />
+      <PackageReference Include="Scrutor" Version="6.0.1" />
     </ItemGroup>
 </Project>

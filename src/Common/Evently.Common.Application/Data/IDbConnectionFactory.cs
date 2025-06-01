@@ -4,5 +4,5 @@ namespace Evently.Common.Application.Data;
 
 public interface IDbConnectionFactory
 {
-    ValueTask<DbConnection> OpenConnectionAsync(CancellationToken cancellationToken);
+    ValueTask<DbConnection> OpenConnectionAsync(CancellationToken cancellationToken = default);
 }

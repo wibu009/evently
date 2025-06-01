@@ -1,8 +1,9 @@
 ﻿using System.Reflection;
-using System.Runtime.Loader;
 using Evently.Common.Application;
-using Evently.Common.Infrastructure;
-using Evently.Common.Infrastructure.Interceptors;
+using Evently.Common.Application.EventBus;
+using Evently.Common.Application.Messaging;
+using Evently.Common.Infrastructure.Configuration;
+using Evently.Common.Infrastructure.Outbox;
 using Evently.Common.Presentation.Endpoints;
 using Evently.Modules.Events.Application.Abstractions.Data;
 using Evently.Modules.Events.Domain.Categories;
@@ -11,11 +12,14 @@ using Evently.Modules.Events.Domain.TicketTypes;
 using Evently.Modules.Events.Infrastructure.Categories;
 using Evently.Modules.Events.Infrastructure.Database;
 using Evently.Modules.Events.Infrastructure.Events;
+using Evently.Modules.Events.Infrastructure.Inbox;
+using Evently.Modules.Events.Infrastructure.Outbox;
 using Evently.Modules.Events.Infrastructure.TicketTypes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Evently.Modules.Events.Infrastructure;
 
@@ -30,7 +34,9 @@ public static class EventsModule
 
     private static void AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        string databaseConnectionString = configuration.GetConnectionString("Database")!;
+        #region Database
+
+        string databaseConnectionString = configuration.GetConnectionStringOrThrow("Database");
 
         services.AddDbContext<EventsDbContext>((sp, options) => options
             .UseNpgsql(
@@ -38,30 +44,98 @@ public static class EventsModule
                 npgsqlOptionsAction => npgsqlOptionsAction
                     .MigrationsHistoryTable(HistoryRepository.DefaultTableName, Schemas.Events))
             .UseSnakeCaseNamingConvention()
-            .AddInterceptors(sp.GetRequiredService<PublishDomainEventsInterceptor>()));
-
-        services.AddScoped<IEventRepository, EventRepository>();
-        services.AddScoped<ITicketTypeRepository, TicketTypeRepository>();
-        services.AddScoped<ICategoryRepository, CategoryRepository>();
+            .AddInterceptors(sp.GetRequiredService<InsertOutboxMessagesInterceptor>()));
         
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<EventsDbContext>());
+
+        #endregion
+
+        #region Events
+
+        services.AddScoped<IEventRepository, EventRepository>();
+
+        #endregion
+
+        #region Ticket Types
+
+        services.AddScoped<ITicketTypeRepository, TicketTypeRepository>();
+
+        #endregion
+
+        #region Categories
+
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
+        
+        #endregion
+        
+        #region Outbox
+
+        services.Configure<OutboxOptions>(configuration.GetSection("Events:Outbox"));
+        services.ConfigureOptions<ConfigureProcessOutboxJob>();
+
+        #endregion
+        
+        #region Inbox
+
+        services.Configure<InboxOptions>(configuration.GetSection("Events:Inbox"));
+        services.ConfigureOptions<ConfigureProcessInboxJob>();
+
+        #endregion
     }
     
     private static void AddApplication(this IServiceCollection services)
     {
-        services.AddApplicationFromAssembly(GetAssembly("Application"));
+        var applicationAssembly = Assembly.Load("Evently.Modules.Events.Application");
+            
+        services.AddApplicationFromAssembly(applicationAssembly);
+
+        Type[] domainEventHandlers = applicationAssembly
+            .GetTypes()
+            .Where(t => t.IsAssignableTo(typeof(IDomainEventHandler)))
+            .ToArray();
+        foreach (Type domainEventHandler in domainEventHandlers)
+        {
+            services.TryAddScoped(domainEventHandler);
+
+            Type domainEvent = domainEventHandler
+                .GetInterfaces()
+                .Single(i => i.IsGenericType)
+                .GetGenericArguments()
+                .Single();
+
+            Type closedIdempotentHandler = typeof(IdempotentDomainEventHandler<>).MakeGenericType(domainEvent);
+
+            services.Decorate(domainEventHandler, closedIdempotentHandler);
+        }
     }
 
     private static void AddPresentation(this IServiceCollection services)
     {
-        services.AddEndpointsFromAssembly(GetAssembly("Presentation"));
-    }
-    
-    private static Assembly GetAssembly(string layer)
-    {
-        string dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
-        string path = Path.Combine(dir, $"Evently.Modules.Events.{layer}.dll");
+        var presentationAssembly = Assembly.Load("Evently.Modules.Events.Presentation");
 
-        return AssemblyLoadContext.Default.LoadFromAssemblyPath(path);
+        #region Endpoints
+
+        services.AddEndpointsFromAssembly(presentationAssembly);
+
+        #endregion
+        
+        Type[] integrationEventHandlers = [.. presentationAssembly
+            .GetTypes()
+            .Where(t => t.IsAssignableTo(typeof(IIntegrationEventHandler)))];
+        foreach (Type integrationEventHandler in integrationEventHandlers)
+        {
+            services.TryAddScoped(integrationEventHandler);
+
+            Type integrationEvent = integrationEventHandler
+                .GetInterfaces()
+                .Single(i => i.IsGenericType)
+                .GetGenericArguments()
+                .Single();
+
+            Type closedIdempotentHandler =
+                typeof(IdempotentIntegrationEventHandler<>).MakeGenericType(integrationEvent);
+
+            services.Decorate(integrationEventHandler, closedIdempotentHandler);
+        }
     }
 }

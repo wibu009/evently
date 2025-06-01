@@ -1,6 +1,7 @@
 using Evently.Api.Extensions;
 using Evently.Api.Middleware;
 using Evently.Common.Infrastructure;
+using Evently.Common.Infrastructure.Configuration;
 using Evently.Common.Presentation.Endpoints;
 using Evently.Modules.Attendance.Infrastructure;
 using Evently.Modules.Events.Infrastructure;
@@ -33,9 +34,9 @@ builder.Services.AddProblemDetails();
 builder.Services.AddOpenApiDocumentation();
 
 builder.Services.AddHealthChecks()
-    .AddNpgSql(builder.Configuration.GetConnectionString("Database")!)
-    .AddRedis(builder.Configuration.GetConnectionString("Cache")!)
-    .AddUrlGroup(new Uri(builder.Configuration.GetValue<string>("KeyCloak:HealthUrl")!), HttpMethod.Get, "keycloak");
+    .AddNpgSql(builder.Configuration.GetConnectionStringOrThrow("Database"))
+    .AddRedis(builder.Configuration.GetConnectionStringOrThrow("Cache"))
+    .AddUrlGroup(new Uri(builder.Configuration.GetValueOrThrow<string>("KeyCloak:HealthUrl")), HttpMethod.Get, "keycloak");
 
 WebApplication app = builder.Build();
 

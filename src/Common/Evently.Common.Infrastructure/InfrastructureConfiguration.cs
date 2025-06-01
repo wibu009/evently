@@ -1,5 +1,5 @@
-﻿using System.Reflection;
-using System.Runtime.Loader;
+﻿using Dapper;
+using Evently.Common.Application.Authentication;
 using Evently.Common.Application.Caching;
 using Evently.Common.Application.Clock;
 using Evently.Common.Application.Data;
@@ -8,13 +8,17 @@ using Evently.Common.Infrastructure.Authentication;
 using Evently.Common.Infrastructure.Authorization;
 using Evently.Common.Infrastructure.Caching;
 using Evently.Common.Infrastructure.Clock;
+using Evently.Common.Infrastructure.Configuration;
 using Evently.Common.Infrastructure.Data;
-using Evently.Common.Infrastructure.Interceptors;
+using Evently.Common.Infrastructure.Outbox;
 using MassTransit;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Npgsql;
+using Quartz;
 using StackExchange.Redis;
 
 namespace Evently.Common.Infrastructure;
@@ -33,18 +37,20 @@ public static class InfrastructureConfiguration
 
         #region Data
 
-        string databaseConnectionString = configuration.GetConnectionString("Database")!;
+        string databaseConnectionString = configuration.GetConnectionStringOrThrow("Database");
         
         NpgsqlDataSource npgsqlDataSource = new NpgsqlDataSourceBuilder(databaseConnectionString).Build();
         services.TryAddSingleton(npgsqlDataSource);
 
         services.AddScoped<IDbConnectionFactory, DbConnectionFactory>();
+        
+        SqlMapper.AddTypeHandler(new GenericArrayHandler<string>());
 
         #endregion
 
         #region Caching
 
-        string redisConnectionString = configuration.GetConnectionString("Redis")!;
+        string redisConnectionString = configuration.GetConnectionStringOrThrow("Cache");
 
         try
         {
@@ -65,9 +71,9 @@ public static class InfrastructureConfiguration
 
         #endregion
         
-        #region Interceptors
+        #region Outbox
         
-        services.TryAddSingleton<PublishDomainEventsInterceptor>();
+        services.TryAddSingleton<InsertOutboxMessagesInterceptor>();
         
         #endregion
         
@@ -75,6 +81,7 @@ public static class InfrastructureConfiguration
 
         services.AddMassTransit(configure =>
         {
+            configure.SetKebabCaseEndpointNameFormatter();
             configure.UsingInMemory((context, cfg) =>
             {
                 cfg.ConfigureEndpoints(context);
@@ -87,13 +94,28 @@ public static class InfrastructureConfiguration
 
         #region Authentication
 
-        services.AddAuthenticationInternal();
+        services.AddAuthorization();
+        services.AddAuthentication().AddJwtBearer();
+        services.AddHttpContextAccessor();
+
+        services.ConfigureOptions<JwtBearerConfigureOptions>();
+
+        services.AddScoped<ICurrentActor, CurrentActor>();
 
         #endregion
 
         #region Authorization
 
-        services.AddAuthorizationInternal();
+        services.AddTransient<IClaimsTransformation, CustomClaimsTransformation>();
+        services.AddTransient<IAuthorizationHandler, PermissionAuthorizationHandler>();
+        services.AddTransient<IAuthorizationPolicyProvider, PermissionAuthorizationPolicyProvider>();
+
+        #endregion
+
+        #region Background Jobs
+
+        services.AddQuartz();
+        services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
 
         #endregion
     }
