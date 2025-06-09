@@ -5,6 +5,7 @@ using Evently.Common.Domain;
 using Evently.Modules.Ticketing.Application.Tickets.GetTicket;
 using Evently.Modules.Ticketing.Domain.Tickets;
 using Evently.Modules.Ticketing.IntegrationEvents;
+using Evently.Modules.Ticketing.IntegrationEvents.Tickets;
 using MediatR;
 
 namespace Evently.Modules.Ticketing.Application.Tickets.CreateTicketBatch;

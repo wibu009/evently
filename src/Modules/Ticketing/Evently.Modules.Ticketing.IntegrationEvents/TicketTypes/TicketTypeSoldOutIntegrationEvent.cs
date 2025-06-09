@@ -1,6 +1,6 @@
 ﻿using Evently.Common.Application.EventBus;
 
-namespace Evently.Modules.Ticketing.IntegrationEvents;
+namespace Evently.Modules.Ticketing.IntegrationEvents.TicketTypes;
 
 public sealed class TicketTypeSoldOutIntegrationEvent(
     Guid id,

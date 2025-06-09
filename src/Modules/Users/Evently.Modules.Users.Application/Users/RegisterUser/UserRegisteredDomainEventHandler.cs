@@ -5,6 +5,7 @@ using Evently.Common.Domain;
 using Evently.Modules.Users.Application.Users.GetUser;
 using Evently.Modules.Users.Domain.Users;
 using Evently.Modules.Users.IntegrationEvents;
+using Evently.Modules.Users.IntegrationEvents.Users;
 using MediatR;
 
 namespace Evently.Modules.Users.Application.Users.RegisterUser;

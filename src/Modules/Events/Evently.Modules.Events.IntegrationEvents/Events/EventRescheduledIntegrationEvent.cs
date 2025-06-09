@@ -1,6 +1,6 @@
 ﻿using Evently.Common.Application.EventBus;
 
-namespace Evently.Modules.Events.IntegrationEvents;
+namespace Evently.Modules.Events.IntegrationEvents.Events;
 
 public sealed class EventRescheduledIntegrationEvent(
     Guid id,

@@ -5,6 +5,7 @@ using Evently.Common.Domain;
 using Evently.Modules.Ticketing.Application.Orders.GetOrder;
 using Evently.Modules.Ticketing.Domain.Orders;
 using Evently.Modules.Ticketing.IntegrationEvents;
+using Evently.Modules.Ticketing.IntegrationEvents.Orders;
 using MediatR;
 
 namespace Evently.Modules.Ticketing.Application.Orders.CreateOrder;

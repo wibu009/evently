@@ -1,6 +1,6 @@
 ﻿using Evently.Common.Application.EventBus;
 
-namespace Evently.Modules.Users.IntegrationEvents;
+namespace Evently.Modules.Users.IntegrationEvents.Users;
 
 public sealed class UserRegisteredIntegrationEvent(
     Guid id,

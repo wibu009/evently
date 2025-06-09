@@ -1,4 +1,4 @@
-﻿namespace Evently.Modules.Ticketing.IntegrationEvents;
+﻿namespace Evently.Modules.Ticketing.IntegrationEvents.Orders;
 
 public sealed class OrderItemModel
 {

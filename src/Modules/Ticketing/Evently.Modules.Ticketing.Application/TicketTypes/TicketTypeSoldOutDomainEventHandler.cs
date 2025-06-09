@@ -2,6 +2,7 @@
 using Evently.Common.Application.Messaging;
 using Evently.Modules.Ticketing.Domain.Events;
 using Evently.Modules.Ticketing.IntegrationEvents;
+using Evently.Modules.Ticketing.IntegrationEvents.TicketTypes;
 
 namespace Evently.Modules.Ticketing.Application.TicketTypes;
 

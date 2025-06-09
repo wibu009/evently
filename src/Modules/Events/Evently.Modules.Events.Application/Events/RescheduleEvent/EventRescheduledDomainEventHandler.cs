@@ -2,6 +2,7 @@
 using Evently.Common.Application.Messaging;
 using Evently.Modules.Events.Domain.Events;
 using Evently.Modules.Events.IntegrationEvents;
+using Evently.Modules.Events.IntegrationEvents.Events;
 
 namespace Evently.Modules.Events.Application.Events.RescheduleEvent;
 

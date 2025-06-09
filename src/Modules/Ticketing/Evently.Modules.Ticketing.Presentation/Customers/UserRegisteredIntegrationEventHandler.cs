@@ -3,6 +3,7 @@ using Evently.Common.Application.Exceptions;
 using Evently.Common.Domain;
 using Evently.Modules.Ticketing.Application.Customers.CreateCustomer;
 using Evently.Modules.Users.IntegrationEvents;
+using Evently.Modules.Users.IntegrationEvents.Users;
 using MediatR;
 
 namespace Evently.Modules.Ticketing.Presentation.Customers;
