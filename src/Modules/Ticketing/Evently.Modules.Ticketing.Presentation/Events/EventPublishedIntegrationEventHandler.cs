@@ -2,6 +2,7 @@
 using Evently.Common.Application.Exceptions;
 using Evently.Common.Domain;
 using Evently.Modules.Events.IntegrationEvents;
+using Evently.Modules.Events.IntegrationEvents.Events;
 using Evently.Modules.Ticketing.Application.Events.CreateEvent;
 using MediatR;
 

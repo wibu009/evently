@@ -1,4 +1,4 @@
-namespace Evently.Modules.Events.IntegrationEvents;
+namespace Evently.Modules.Events.IntegrationEvents.TicketTypes;
 
 public sealed class TicketTypeModel
 {

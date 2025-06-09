@@ -2,6 +2,7 @@
 using Evently.Common.Application.Messaging;
 using Evently.Modules.Events.Domain.TicketTypes;
 using Evently.Modules.Events.IntegrationEvents;
+using Evently.Modules.Events.IntegrationEvents.TicketTypes;
 
 namespace Evently.Modules.Events.Application.TicketTypes.UpdateTicketTypePrice;
 

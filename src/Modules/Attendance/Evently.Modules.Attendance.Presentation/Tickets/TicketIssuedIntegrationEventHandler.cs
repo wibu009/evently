@@ -3,6 +3,7 @@ using Evently.Common.Application.Exceptions;
 using Evently.Common.Domain;
 using Evently.Modules.Attendance.Application.Tickets.CreateTicket;
 using Evently.Modules.Ticketing.IntegrationEvents;
+using Evently.Modules.Ticketing.IntegrationEvents.Tickets;
 using MediatR;
 
 namespace Evently.Modules.Attendance.Presentation.Tickets;

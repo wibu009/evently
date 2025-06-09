@@ -3,6 +3,7 @@ using Evently.Common.Application.Exceptions;
 using Evently.Common.Domain;
 using Evently.Modules.Attendance.Application.Attendees.CreateAttendee;
 using Evently.Modules.Users.IntegrationEvents;
+using Evently.Modules.Users.IntegrationEvents.Users;
 using MediatR;
 
 namespace Evently.Modules.Attendance.Presentation.Attendees;

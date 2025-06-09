@@ -1,6 +1,6 @@
 ﻿using Evently.Common.Application.EventBus;
 
-namespace Evently.Modules.Ticketing.IntegrationEvents;
+namespace Evently.Modules.Ticketing.IntegrationEvents.Tickets;
 
 public sealed class TicketIssuedIntegrationEvent(
     Guid id,

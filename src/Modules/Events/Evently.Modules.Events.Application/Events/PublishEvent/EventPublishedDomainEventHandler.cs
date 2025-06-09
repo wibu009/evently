@@ -5,6 +5,8 @@ using Evently.Common.Domain;
 using Evently.Modules.Events.Application.Events.GetEvent;
 using Evently.Modules.Events.Domain.Events;
 using Evently.Modules.Events.IntegrationEvents;
+using Evently.Modules.Events.IntegrationEvents.Events;
+using Evently.Modules.Events.IntegrationEvents.TicketTypes;
 using MediatR;
 
 namespace Evently.Modules.Events.Application.Events.PublishEvent;
