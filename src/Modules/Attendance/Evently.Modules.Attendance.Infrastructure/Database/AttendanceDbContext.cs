@@ -27,6 +27,7 @@ public sealed class AttendanceDbContext(DbContextOptions<AttendanceDbContext> op
         modelBuilder.ApplyConfiguration(new InboxMessageConsumerConfiguration());
         modelBuilder.ApplyConfiguration(new AttendeeConfiguration());
         modelBuilder.ApplyConfiguration(new EventConfiguration());
+        modelBuilder.ApplyConfiguration(new EventStatisticsConfiguration());
         modelBuilder.ApplyConfiguration(new TicketConfiguration());
     }
 }
