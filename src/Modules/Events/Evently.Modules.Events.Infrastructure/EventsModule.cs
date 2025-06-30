@@ -15,6 +15,10 @@ using Evently.Modules.Events.Infrastructure.Events;
 using Evently.Modules.Events.Infrastructure.Inbox;
 using Evently.Modules.Events.Infrastructure.Outbox;
 using Evently.Modules.Events.Infrastructure.TicketTypes;
+using Evently.Modules.Events.Presentation.Events;
+using MassTransit;
+using MassTransit.Configuration;
+using MassTransit.RedisIntegration.Saga;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
@@ -117,6 +121,12 @@ public static class EventsModule
 
         services.AddEndpointsFromAssembly(presentationAssembly);
 
+        #endregion
+
+        #region Consumers
+        
+        services.RegisterSagaStateMachine<CancelEventSaga, CancelEventState>();
+        
         #endregion
         
         Type[] integrationEventHandlers = [.. presentationAssembly
