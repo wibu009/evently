@@ -118,33 +118,24 @@ public static class EventsModule
     {
         var presentationAssembly = Assembly.Load("Evently.Modules.Events.Presentation");
 
-        #region Endpoints
-
         services.AddEndpointsFromAssembly(presentationAssembly);
 
-        #endregion
-
-        #region Consumers
-        
         string redisConnectionString = configuration.GetConnectionStringOrThrow("Cache");
 
         services.AddMassTransit(cfg =>
         {
             ISagaRegistrationConfigurator<CancelEventState>? cancelEventSagaConfig = cfg.AddSagaStateMachine<CancelEventSaga, CancelEventState>();
-            
-            using ServiceProvider sp = services.BuildServiceProvider();
-            IConnectionMultiplexer? connectionMultiplexer = sp.GetService<IConnectionMultiplexer>();
-            if (connectionMultiplexer is { IsConnected: true })
+
+            try
             {
+                ConnectionMultiplexer.Connect(redisConnectionString);
                 cancelEventSagaConfig.RedisRepository(redisConnectionString);
             }
-            else
+            catch
             {
                 cancelEventSagaConfig.InMemoryRepository();
             }
         });
-        
-        #endregion
         
         Type[] integrationEventHandlers = [.. presentationAssembly
             .GetTypes()
