@@ -24,6 +24,7 @@ using Evently.Modules.Ticketing.Infrastructure.Outbox;
 using Evently.Modules.Ticketing.Infrastructure.Payments;
 using Evently.Modules.Ticketing.Infrastructure.Tickets;
 using Evently.Modules.Users.IntegrationEvents.Users;
+using MassTransit;
 using MassTransit.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -142,25 +143,20 @@ public static class TicketingModule
     {
         var presentationAssembly = Assembly.Load("Evently.Modules.Ticketing.Presentation");
         
-        #region Endpoints
-        
         services.AddEndpointsFromAssembly(presentationAssembly);
-        
-        #endregion
 
-        #region Consumers
-
-        //Customers
-        services.RegisterConsumer<IntegrationEventConsumer<UserRegisteredIntegrationEvent>>();
-        services.RegisterConsumer<IntegrationEventConsumer<UserProfileUpdatedIntegrationEvent>>();
+        services.AddMassTransit(cfg =>
+        {
+            // Customers
+            cfg.AddConsumer<IntegrationEventConsumer<UserRegisteredIntegrationEvent>>();
+            cfg.AddConsumer<IntegrationEventConsumer<UserProfileUpdatedIntegrationEvent>>();
         
-        //Events
-        services.RegisterConsumer<IntegrationEventConsumer<EventPublishedIntegrationEvent>>();
+            //Events
+            cfg.AddConsumer<IntegrationEventConsumer<EventPublishedIntegrationEvent>>();
         
-        //Ticket Types
-        services.RegisterConsumer<IntegrationEventConsumer<TicketTypePriceChangedIntegrationEvent>>();
-
-        #endregion
+            //Ticket Types
+            cfg.AddConsumer<IntegrationEventConsumer<TicketTypePriceChangedIntegrationEvent>>();
+        });
         
         Type[] integrationEventHandlers = [.. presentationAssembly
             .GetTypes()

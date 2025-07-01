@@ -124,11 +124,7 @@ public static class UsersModule
     {
         var presentationAssembly = Assembly.Load("Evently.Modules.Users.Presentation");
 
-        #region Endpoints
-
         services.AddEndpointsFromAssembly(presentationAssembly);
-
-        #endregion
         
         Type[] integrationEventHandlers = [.. presentationAssembly
             .GetTypes()

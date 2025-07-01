@@ -18,14 +18,14 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((context, loggerConfig) => loggerConfig.ReadFrom.Configuration(context.Configuration));
 
 // Module Setup
-builder.Services.AddCoreServices(builder.Configuration);
-
 builder.Configuration.AddModuleConfiguration("events", "users", "ticketing", "attendance");
 
 builder.Services.AddEventsModule(builder.Configuration);
 builder.Services.AddUsersModule(builder.Configuration);
 builder.Services.AddTicketingModule(builder.Configuration);
 builder.Services.AddAttendanceModule(builder.Configuration);
+
+builder.Services.AddCoreServices(builder.Configuration);
 
 // Other Setup
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();

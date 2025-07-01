@@ -21,6 +21,7 @@ using Evently.Modules.Ticketing.IntegrationEvents;
 using Evently.Modules.Ticketing.IntegrationEvents.Tickets;
 using Evently.Modules.Users.IntegrationEvents;
 using Evently.Modules.Users.IntegrationEvents.Users;
+using MassTransit;
 using MassTransit.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -118,23 +119,23 @@ public static class AttendanceModule
     {
         var presentationAssembly = Assembly.Load("Evently.Modules.Attendance.Presentation");
         
-        #region Endpoints
-
         services.AddEndpointsFromAssembly(presentationAssembly);
-
-        #endregion
 
         #region Consumers
 
-        // Attendees
-        services.RegisterConsumer<IntegrationEventConsumer<UserRegisteredIntegrationEvent>>();
-        services.RegisterConsumer<IntegrationEventConsumer<UserProfileUpdatedIntegrationEvent>>();
+        services.AddMassTransit(cfg =>
+        {
+            // Attendees
+            cfg.AddConsumer<IntegrationEventConsumer<UserRegisteredIntegrationEvent>>();
+            cfg.AddConsumer<IntegrationEventConsumer<UserProfileUpdatedIntegrationEvent>>();
         
-        // Events
-        services.RegisterConsumer<IntegrationEventConsumer<EventPublishedIntegrationEvent>>();
+            // Events
+            cfg.AddConsumer<IntegrationEventConsumer<EventPublishedIntegrationEvent>>();
         
-        // Tickets
-        services.RegisterConsumer<IntegrationEventConsumer<TicketIssuedIntegrationEvent>>();
+            // Tickets
+            cfg.AddConsumer<IntegrationEventConsumer<TicketIssuedIntegrationEvent>>();
+        });
+        
 
         #endregion
         

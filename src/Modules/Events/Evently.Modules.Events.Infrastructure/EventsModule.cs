@@ -24,6 +24,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using StackExchange.Redis;
 
 namespace Evently.Modules.Events.Infrastructure;
 
@@ -33,7 +34,7 @@ public static class EventsModule
     {
         services.AddApplication();
         services.AddInfrastructure(configuration);
-        services.AddPresentation();
+        services.AddPresentation(configuration);
     }
 
     private static void AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
@@ -113,7 +114,7 @@ public static class EventsModule
         }
     }
 
-    private static void AddPresentation(this IServiceCollection services)
+    private static void AddPresentation(this IServiceCollection services, IConfiguration configuration)
     {
         var presentationAssembly = Assembly.Load("Evently.Modules.Events.Presentation");
 
@@ -125,7 +126,23 @@ public static class EventsModule
 
         #region Consumers
         
-        services.RegisterSagaStateMachine<CancelEventSaga, CancelEventState>();
+        string redisConnectionString = configuration.GetConnectionStringOrThrow("Cache");
+
+        services.AddMassTransit(cfg =>
+        {
+            ISagaRegistrationConfigurator<CancelEventState>? cancelEventSagaConfig = cfg.AddSagaStateMachine<CancelEventSaga, CancelEventState>();
+            
+            using ServiceProvider sp = services.BuildServiceProvider();
+            IConnectionMultiplexer? connectionMultiplexer = sp.GetService<IConnectionMultiplexer>();
+            if (connectionMultiplexer is { IsConnected: true })
+            {
+                cancelEventSagaConfig.RedisRepository(redisConnectionString);
+            }
+            else
+            {
+                cancelEventSagaConfig.InMemoryRepository();
+            }
+        });
         
         #endregion
         
