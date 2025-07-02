@@ -2,4 +2,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Common\Evently.Common.Domain\Evently.Common.Domain.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Evently.Modules.Attendance.Domain.UnitTests" />
+  </ItemGroup>
 </Project>

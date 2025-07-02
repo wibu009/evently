@@ -46,7 +46,7 @@ public class CategoryTests : BaseTest
         Category category = result.Value;
         category.ClearDomainEvents();
 
-        string newName = Faker.Music.Genre();
+        string newName = "New Name";
 
         //Act
         category.ChangeName(newName);

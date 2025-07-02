@@ -124,6 +124,21 @@ public static class EventsModule
 
         services.AddMassTransit(cfg =>
         {
+            Type[] integrationEventTypes = presentationAssembly
+                .GetTypes()
+                .Where(t => t.IsAssignableTo(typeof(IIntegrationEventHandler)))
+                .Select(t => t.GetInterfaces()
+                    .Single(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IIntegrationEventHandler<>))
+                    .GetGenericArguments()
+                    .Single())
+                .ToArray();
+            
+            foreach (Type eventType in integrationEventTypes)
+            {
+                Type consumerType = typeof(IntegrationEventConsumer<>).MakeGenericType(eventType);
+                cfg.AddConsumer(consumerType);
+            }
+            
             ISagaRegistrationConfigurator<CancelEventState>? cancelEventSagaConfig = cfg.AddSagaStateMachine<CancelEventSaga, CancelEventState>();
 
             try

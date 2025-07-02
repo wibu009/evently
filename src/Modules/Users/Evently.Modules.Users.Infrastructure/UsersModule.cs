@@ -15,6 +15,7 @@ using Evently.Modules.Users.Infrastructure.Identity;
 using Evently.Modules.Users.Infrastructure.Inbox;
 using Evently.Modules.Users.Infrastructure.Outbox;
 using Evently.Modules.Users.Infrastructure.Users;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
@@ -125,6 +126,24 @@ public static class UsersModule
         var presentationAssembly = Assembly.Load("Evently.Modules.Users.Presentation");
 
         services.AddEndpointsFromAssembly(presentationAssembly);
+        
+        services.AddMassTransit(cfg =>
+        {
+            Type[] integrationEventTypes = presentationAssembly
+                .GetTypes()
+                .Where(t => t.IsAssignableTo(typeof(IIntegrationEventHandler)))
+                .Select(t => t.GetInterfaces()
+                    .Single(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IIntegrationEventHandler<>))
+                    .GetGenericArguments()
+                    .Single())
+                .ToArray();
+            
+            foreach (Type eventType in integrationEventTypes)
+            {
+                Type consumerType = typeof(IntegrationEventConsumer<>).MakeGenericType(eventType);
+                cfg.AddConsumer(consumerType);
+            }
+        });
         
         Type[] integrationEventHandlers = [.. presentationAssembly
             .GetTypes()

@@ -125,17 +125,21 @@ public static class AttendanceModule
 
         services.AddMassTransit(cfg =>
         {
-            // Attendees
-            cfg.AddConsumer<IntegrationEventConsumer<UserRegisteredIntegrationEvent>>();
-            cfg.AddConsumer<IntegrationEventConsumer<UserProfileUpdatedIntegrationEvent>>();
-        
-            // Events
-            cfg.AddConsumer<IntegrationEventConsumer<EventPublishedIntegrationEvent>>();
-        
-            // Tickets
-            cfg.AddConsumer<IntegrationEventConsumer<TicketIssuedIntegrationEvent>>();
+            Type[] integrationEventTypes = presentationAssembly
+                .GetTypes()
+                .Where(t => t.IsAssignableTo(typeof(IIntegrationEventHandler)))
+                .Select(t => t.GetInterfaces()
+                    .Single(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IIntegrationEventHandler<>))
+                    .GetGenericArguments()
+                    .Single())
+                .ToArray();
+            
+            foreach (Type eventType in integrationEventTypes)
+            {
+                Type consumerType = typeof(IntegrationEventConsumer<>).MakeGenericType(eventType);
+                cfg.AddConsumer(consumerType);
+            }
         });
-        
 
         #endregion
         

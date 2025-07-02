@@ -147,15 +147,20 @@ public static class TicketingModule
 
         services.AddMassTransit(cfg =>
         {
-            // Customers
-            cfg.AddConsumer<IntegrationEventConsumer<UserRegisteredIntegrationEvent>>();
-            cfg.AddConsumer<IntegrationEventConsumer<UserProfileUpdatedIntegrationEvent>>();
-        
-            //Events
-            cfg.AddConsumer<IntegrationEventConsumer<EventPublishedIntegrationEvent>>();
-        
-            //Ticket Types
-            cfg.AddConsumer<IntegrationEventConsumer<TicketTypePriceChangedIntegrationEvent>>();
+            Type[] integrationEventTypes = presentationAssembly
+                .GetTypes()
+                .Where(t => t.IsAssignableTo(typeof(IIntegrationEventHandler)))
+                .Select(t => t.GetInterfaces()
+                    .Single(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IIntegrationEventHandler<>))
+                    .GetGenericArguments()
+                    .Single())
+                .ToArray();
+            
+            foreach (Type eventType in integrationEventTypes)
+            {
+                Type consumerType = typeof(IntegrationEventConsumer<>).MakeGenericType(eventType);
+                cfg.AddConsumer(consumerType);
+            }
         });
         
         Type[] integrationEventHandlers = [.. presentationAssembly
