@@ -6,6 +6,7 @@
     <ProjectReference Include="..\Evently.Common.Application\Evently.Common.Application.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="MassTransit.Abstractions" Version="8.4.0" />
+    <PackageReference Include="MassTransit.Abstractions" Version="8.5.0" />
+    <PackageReference Include="MassTransit.StateMachineVisualizer" Version="8.5.0" />
   </ItemGroup>
 </Project>

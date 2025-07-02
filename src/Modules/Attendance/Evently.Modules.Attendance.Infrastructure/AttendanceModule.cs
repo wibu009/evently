@@ -21,6 +21,7 @@ using Evently.Modules.Ticketing.IntegrationEvents;
 using Evently.Modules.Ticketing.IntegrationEvents.Tickets;
 using Evently.Modules.Users.IntegrationEvents;
 using Evently.Modules.Users.IntegrationEvents.Users;
+using MassTransit;
 using MassTransit.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -118,23 +119,27 @@ public static class AttendanceModule
     {
         var presentationAssembly = Assembly.Load("Evently.Modules.Attendance.Presentation");
         
-        #region Endpoints
-
         services.AddEndpointsFromAssembly(presentationAssembly);
-
-        #endregion
 
         #region Consumers
 
-        // Attendees
-        services.RegisterConsumer<IntegrationEventConsumer<UserRegisteredIntegrationEvent>>();
-        services.RegisterConsumer<IntegrationEventConsumer<UserProfileUpdatedIntegrationEvent>>();
-        
-        // Events
-        services.RegisterConsumer<IntegrationEventConsumer<EventPublishedIntegrationEvent>>();
-        
-        // Tickets
-        services.RegisterConsumer<IntegrationEventConsumer<TicketIssuedIntegrationEvent>>();
+        services.AddMassTransit(cfg =>
+        {
+            Type[] integrationEventTypes = presentationAssembly
+                .GetTypes()
+                .Where(t => t.IsAssignableTo(typeof(IIntegrationEventHandler)))
+                .Select(t => t.GetInterfaces()
+                    .Single(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IIntegrationEventHandler<>))
+                    .GetGenericArguments()
+                    .Single())
+                .ToArray();
+            
+            foreach (Type eventType in integrationEventTypes)
+            {
+                Type consumerType = typeof(IntegrationEventConsumer<>).MakeGenericType(eventType);
+                cfg.AddConsumer(consumerType);
+            }
+        });
 
         #endregion
         

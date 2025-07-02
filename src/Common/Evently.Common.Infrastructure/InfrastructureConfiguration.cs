@@ -55,8 +55,6 @@ public static class InfrastructureConfiguration
         try
         {
             IConnectionMultiplexer connectionMultiplexer = ConnectionMultiplexer.Connect(redisConnectionString);
-            services.TryAddSingleton(connectionMultiplexer);
-        
             services.AddStackExchangeRedisCache(options => 
                 options.ConnectionMultiplexerFactory = () => Task.FromResult(connectionMultiplexer));
         }

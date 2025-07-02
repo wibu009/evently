@@ -6,6 +6,7 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using OrderResponse = Evently.Modules.Ticketing.Application.Orders.GetOrder.OrderResponse;
 
 namespace Evently.Modules.Ticketing.Presentation.Orders;
 

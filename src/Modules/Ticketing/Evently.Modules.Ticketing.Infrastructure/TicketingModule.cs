@@ -24,6 +24,7 @@ using Evently.Modules.Ticketing.Infrastructure.Outbox;
 using Evently.Modules.Ticketing.Infrastructure.Payments;
 using Evently.Modules.Ticketing.Infrastructure.Tickets;
 using Evently.Modules.Users.IntegrationEvents.Users;
+using MassTransit;
 using MassTransit.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -142,25 +143,25 @@ public static class TicketingModule
     {
         var presentationAssembly = Assembly.Load("Evently.Modules.Ticketing.Presentation");
         
-        #region Endpoints
-        
         services.AddEndpointsFromAssembly(presentationAssembly);
-        
-        #endregion
 
-        #region Consumers
-
-        //Customers
-        services.RegisterConsumer<IntegrationEventConsumer<UserRegisteredIntegrationEvent>>();
-        services.RegisterConsumer<IntegrationEventConsumer<UserProfileUpdatedIntegrationEvent>>();
-        
-        //Events
-        services.RegisterConsumer<IntegrationEventConsumer<EventPublishedIntegrationEvent>>();
-        
-        //Ticket Types
-        services.RegisterConsumer<IntegrationEventConsumer<TicketTypePriceChangedIntegrationEvent>>();
-
-        #endregion
+        services.AddMassTransit(cfg =>
+        {
+            Type[] integrationEventTypes = presentationAssembly
+                .GetTypes()
+                .Where(t => t.IsAssignableTo(typeof(IIntegrationEventHandler)))
+                .Select(t => t.GetInterfaces()
+                    .Single(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IIntegrationEventHandler<>))
+                    .GetGenericArguments()
+                    .Single())
+                .ToArray();
+            
+            foreach (Type eventType in integrationEventTypes)
+            {
+                Type consumerType = typeof(IntegrationEventConsumer<>).MakeGenericType(eventType);
+                cfg.AddConsumer(consumerType);
+            }
+        });
         
         Type[] integrationEventHandlers = [.. presentationAssembly
             .GetTypes()
