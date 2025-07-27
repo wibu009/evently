@@ -111,6 +111,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Evently.Modules.Ticketing.D
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Evently.Modules.Users.Domain.UnitTests", "test\Modules\Users\Evently.Modules.Users.Domain.UnitTests\Evently.Modules.Users.Domain.UnitTests.csproj", "{51A7C6C6-B111-4FED-9184-9263977CF7E2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Evently.Modules.Users.IntegrationTests", "test\Modules\Users\Evently.Modules.Users.IntegrationTests\Evently.Modules.Users.IntegrationTests.csproj", "{C78773EB-A9B4-4586-A6C4-0B2F0814C596}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -257,6 +259,10 @@ Global
 		{51A7C6C6-B111-4FED-9184-9263977CF7E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{51A7C6C6-B111-4FED-9184-9263977CF7E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{51A7C6C6-B111-4FED-9184-9263977CF7E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C78773EB-A9B4-4586-A6C4-0B2F0814C596}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C78773EB-A9B4-4586-A6C4-0B2F0814C596}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C78773EB-A9B4-4586-A6C4-0B2F0814C596}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C78773EB-A9B4-4586-A6C4-0B2F0814C596}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -308,5 +314,6 @@ Global
 		{AFECAB52-07ED-4740-B97A-5A5EA7ADBC15} = {928A59FA-84D5-4DA8-8E03-5A3747B8ADF1}
 		{F4AFDA40-A7E1-4929-B51B-CCD7BF6B971A} = {144A9C62-FD40-4650-B666-67091952BC5E}
 		{51A7C6C6-B111-4FED-9184-9263977CF7E2} = {6D1046D6-DBE6-4F65-9AD3-B35499FAE31D}
+		{C78773EB-A9B4-4586-A6C4-0B2F0814C596} = {6D1046D6-DBE6-4F65-9AD3-B35499FAE31D}
 	EndGlobalSection
 EndGlobal

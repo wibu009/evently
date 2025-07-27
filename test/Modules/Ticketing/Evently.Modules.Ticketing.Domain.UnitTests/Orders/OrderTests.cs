@@ -33,7 +33,7 @@ public class OrderTests : BaseTest
     {
         //Arrange
         var customer = Customer.Create(
-            Guid.NewGuid(),
+            Guid.CreateVersion7(),
             Faker.Internet.Email(),
             Faker.Name.FirstName(),
             Faker.Name.LastName());

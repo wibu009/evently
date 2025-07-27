@@ -24,7 +24,7 @@ public class PaymentTests : BaseTest
         //Act
         Result<Payment> result = Payment.Create(
             order,
-            Guid.NewGuid(),
+            Guid.CreateVersion7(),
             Faker.Random.Decimal(),
             Faker.Random.String(3));
 
