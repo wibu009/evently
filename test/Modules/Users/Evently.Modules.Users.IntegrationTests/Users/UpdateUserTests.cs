@@ -32,7 +32,7 @@ public class UpdateUserTests(IntegrationTestWebAppFactory factory) : BaseIntegra
     public async Task Should_ReturnError_WhenUserDoesNotExist()
     {
         // Arrange
-        var userId = Guid.NewGuid();
+        var userId = Guid.CreateVersion7();
 
         // Act
         Result updateResult = await Sender.Send(
