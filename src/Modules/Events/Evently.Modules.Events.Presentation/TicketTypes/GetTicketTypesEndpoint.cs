@@ -14,9 +14,9 @@ internal sealed class GetTicketTypesEndpoint : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("ticket-types", async (ISender sender) =>
+        app.MapGet("ticket-types", async (Guid eventId, ISender sender) =>
             {
-                Result<IReadOnlyCollection<TicketTypeResponse>> result = await sender.Send(new GetTicketTypesQuery());
+                Result<IReadOnlyCollection<TicketTypeResponse>> result = await sender.Send(new GetTicketTypesQuery(eventId));
                 return result.Match(Results.Ok, ApiResults.Problem);
             })
             .RequireAuthorization(Permissions.GetTicketTypes)
