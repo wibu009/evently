@@ -2,4 +2,4 @@
 
 namespace Evently.Modules.Attendance.Application.Attendees.UpdateAttendee;
 
-public sealed record UpdateAttendeeCommand(Guid Id, string FirstName, string LastName) : ICommand;
+public sealed record UpdateAttendeeCommand(Guid AttendeeId, string FirstName, string LastName) : ICommand;

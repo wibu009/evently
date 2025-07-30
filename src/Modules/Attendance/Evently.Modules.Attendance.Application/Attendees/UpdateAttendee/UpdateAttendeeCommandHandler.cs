@@ -12,10 +12,10 @@ internal sealed class UpdateAttendeeCommandHandler(
 {
     public async Task<Result> Handle(UpdateAttendeeCommand request, CancellationToken cancellationToken)
     {
-        Attendee? attendee = await attendeeRepository.GetAsync(request.Id, cancellationToken);
+        Attendee? attendee = await attendeeRepository.GetAsync(request.AttendeeId, cancellationToken);
         if (attendee is null)
         {
-            return Result.Failure(AttendeeErrors.NotFound(request.Id));
+            return Result.Failure(AttendeeErrors.NotFound(request.AttendeeId));
         }
         
         attendee.Update(request.FirstName, request.LastName);
