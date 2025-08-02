@@ -14,9 +14,9 @@ public class CreateTicketsTests(IntegrationTestWebAppFactory factory) : BaseInte
     {
         // Arrange
         var command = new CreateTicketCommand(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
+            Guid.CreateVersion7(),
+            Guid.CreateVersion7(),
+            Guid.CreateVersion7(),
             Faker.Random.String());
 
         // Act
@@ -30,12 +30,12 @@ public class CreateTicketsTests(IntegrationTestWebAppFactory factory) : BaseInte
     public async Task Should_ReturnFailure_WhenEventDoesNotExist()
     {
         // Arrange
-        Guid attendeeId = await Sender.CreateAttendeeAsync(Guid.NewGuid());
+        Guid attendeeId = await Sender.CreateAttendeeAsync(Guid.CreateVersion7());
 
         var command = new CreateTicketCommand(
-            Guid.NewGuid(),
+            Guid.CreateVersion7(),
             attendeeId,
-            Guid.NewGuid(),
+            Guid.CreateVersion7(),
             Faker.Random.String());
 
         // Act
@@ -49,11 +49,11 @@ public class CreateTicketsTests(IntegrationTestWebAppFactory factory) : BaseInte
     public async Task Should_ReturnSuccess_WhenTicketIsCreated()
     {
         //Arrange
-        Guid attendeeId = await Sender.CreateAttendeeAsync(Guid.NewGuid());
-        Guid eventId = await Sender.CreateEventAsync(Guid.NewGuid());
+        Guid attendeeId = await Sender.CreateAttendeeAsync(Guid.CreateVersion7());
+        Guid eventId = await Sender.CreateEventAsync(Guid.CreateVersion7());
 
         var command = new CreateTicketCommand(
-            Guid.NewGuid(),
+            Guid.CreateVersion7(),
             attendeeId,
             eventId,
             Ulid.NewUlid().ToString());

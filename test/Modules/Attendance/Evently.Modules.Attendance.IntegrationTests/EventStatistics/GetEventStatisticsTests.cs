@@ -12,7 +12,7 @@ public class GetEventStatisticsTests(IntegrationTestWebAppFactory factory) : Bas
     public async Task Should_ReturnFailure_WhenEventStatisticsDoesNotExist()
     {
         // Arrange
-        var query = new GetEventStatisticsQuery(Guid.NewGuid());
+        var query = new GetEventStatisticsQuery(Guid.CreateVersion7());
 
         // Act
         Result<EventStatisticsResponse> result = await Sender.Send(query);
