@@ -6,7 +6,7 @@ namespace Evently.Modules.Users.Domain.UnitTests.Users;
 
 public class UsersTest : BaseTest
 {
-        [Fact]
+    [Fact]
     public void Create_ShouldReturnUser()
     {
         // Act

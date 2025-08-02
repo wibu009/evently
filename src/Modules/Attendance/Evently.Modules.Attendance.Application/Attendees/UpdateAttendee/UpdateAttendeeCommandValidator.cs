@@ -6,7 +6,7 @@ internal sealed class UpdateAttendeeCommandValidator : AbstractValidator<UpdateA
 {
     public UpdateAttendeeCommandValidator()
     {
-        RuleFor(x => x.Id).NotEmpty();
+        RuleFor(x => x.AttendeeId).NotEmpty();
         RuleFor(x => x.FirstName).NotEmpty();
         RuleFor(x => x.LastName).NotEmpty();
     }

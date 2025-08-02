@@ -25,6 +25,7 @@ internal sealed class GetTicketTypesQueryHandler(IDbConnectionFactory dbConnecti
                  currency AS {nameof(TicketTypeResponse.Currency)},
                  quantity AS {nameof(TicketTypeResponse.Quantity)}
              FROM events.ticket_types
+             WHERE event_id = @EventId
              """;
         
         List<TicketTypeResponse> ticketTypes = (await connection.QueryAsync<TicketTypeResponse>(sql, request)).AsList();

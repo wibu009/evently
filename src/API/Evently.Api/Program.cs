@@ -64,3 +64,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 await app.RunAsync();
+
+#pragma warning disable CA1515
+public partial class Program;
+#pragma warning restore CA1515
