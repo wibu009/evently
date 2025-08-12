@@ -27,6 +27,8 @@ services:
     environment:
       - KC_HEALTH_ENABLED=true
       - KC_METRICS_ENABLED=true
+      - KC_TRACING_ENABLED=true
+      - KC_TRACING_ENDPOINT=http://evently.trace:4317
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
     volumes:
@@ -53,3 +55,11 @@ services:
     container_name: evently.redis
     ports:
       - "6379:6379"
+  
+  evently.trace:
+    image: jaegertracing/all-in-one:1.72.0
+    container_name: evently.jaeger
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "16686:16686"

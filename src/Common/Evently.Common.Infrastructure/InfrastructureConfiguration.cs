@@ -18,6 +18,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Npgsql;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Quartz;
 using StackExchange.Redis;
 
@@ -25,8 +27,9 @@ namespace Evently.Common.Infrastructure;
 
 public static class InfrastructureConfiguration
 {
-    public static void AddCoreServices(
+    public static void AddInfrastructure(
         this IServiceCollection services,
+        string serviceName,
         IConfiguration configuration)
     {
         #region Clock
@@ -114,6 +117,26 @@ public static class InfrastructureConfiguration
 
         services.AddQuartz();
         services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
+
+        #endregion
+
+        #region  OpenTelemetry
+
+        services
+            .AddOpenTelemetry()
+            .ConfigureResource(resourceBuilder => resourceBuilder.AddService(serviceName))
+            .WithTracing(tracingBuilder =>
+            {
+                tracingBuilder
+                    .AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddEntityFrameworkCoreInstrumentation()
+                    .AddRedisInstrumentation()
+                    .AddNpgsql()
+                    .AddSource(MassTransit.Logging.DiagnosticHeaders.DefaultListenerName);
+
+                tracingBuilder.AddOtlpExporter();
+            });
 
         #endregion
     }

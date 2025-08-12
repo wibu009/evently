@@ -1,5 +1,6 @@
 using Evently.Api.Extensions;
 using Evently.Api.Middleware;
+using Evently.Api.OpenTelemetry;
 using Evently.Common.Infrastructure;
 using Evently.Common.Infrastructure.Configuration;
 using Evently.Common.Presentation.Endpoints;
@@ -25,7 +26,7 @@ builder.Services.AddUsersModule(builder.Configuration);
 builder.Services.AddTicketingModule(builder.Configuration);
 builder.Services.AddAttendanceModule(builder.Configuration);
 
-builder.Services.AddCoreServices(builder.Configuration);
+builder.Services.AddInfrastructure(DiagnosticsConfig.ServiceName, builder.Configuration);
 
 // Other Setup
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -56,6 +57,7 @@ app.MapHealthChecks("health", new HealthCheckOptions
     ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
 });
 
+app.UseLogContextTraceLogging();
 app.UseSerilogRequestLogging();
 
 app.UseExceptionHandler();
