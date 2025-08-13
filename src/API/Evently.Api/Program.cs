@@ -10,6 +10,7 @@ using Evently.Modules.Ticketing.Infrastructure;
 using Evently.Modules.Users.Infrastructure;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using RabbitMQ.Client;
 using Scalar.AspNetCore;
 using Serilog;
 
@@ -34,9 +35,15 @@ builder.Services.AddProblemDetails();
 
 builder.Services.AddOpenApiDocumentation();
 
-builder.Services.AddHealthChecks()
+builder.Services
+    .AddHealthChecks()
     .AddNpgSql(builder.Configuration.GetConnectionStringOrThrow("Database"))
     .AddRedis(builder.Configuration.GetConnectionStringOrThrow("Cache"))
+    .AddRabbitMQ(_ => new ConnectionFactory
+        {
+            Uri = new Uri(builder.Configuration.GetConnectionStringOrThrow("Queue"))
+        }
+        .CreateConnectionAsync().GetAwaiter().GetResult())
     .AddUrlGroup(new Uri(builder.Configuration.GetValueOrThrow<string>("KeyCloak:HealthUrl")), HttpMethod.Get, "keycloak");
 
 WebApplication app = builder.Build();

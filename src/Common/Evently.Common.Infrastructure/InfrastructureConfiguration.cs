@@ -10,6 +10,7 @@ using Evently.Common.Infrastructure.Caching;
 using Evently.Common.Infrastructure.Clock;
 using Evently.Common.Infrastructure.Configuration;
 using Evently.Common.Infrastructure.Data;
+using Evently.Common.Infrastructure.EventBus;
 using Evently.Common.Infrastructure.Outbox;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication;
@@ -79,12 +80,21 @@ public static class InfrastructureConfiguration
         #endregion
         
         #region EventBus
+        
+        var rabbitMqSettings = new RabbitMqSettings(configuration.GetConnectionStringOrThrow("Queue"));
 
         services.AddMassTransit(configure =>
         {
-            configure.SetKebabCaseEndpointNameFormatter();
-            configure.UsingInMemory((context, cfg) =>
+            configure.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter(
+                prefix: serviceName.ToLowerInvariant().Replace(".", "-"),
+                includeNamespace: false));
+            configure.UsingRabbitMq((context, cfg) =>
             {
+                cfg.Host(new Uri(rabbitMqSettings.Host), h =>
+                {
+                    h.Username(rabbitMqSettings.Username);
+                    h.Password(rabbitMqSettings.Password);
+                });
                 cfg.ConfigureEndpoints(context);
             });
         });
