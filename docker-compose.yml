@@ -27,6 +27,8 @@ services:
     environment:
       - KC_HEALTH_ENABLED=true
       - KC_METRICS_ENABLED=true
+      - KC_TRACING_ENABLED=true
+      - KC_TRACING_ENDPOINT=http://evently.trace:4317
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
     volumes:
@@ -53,3 +55,25 @@ services:
     container_name: evently.redis
     ports:
       - "6379:6379"
+  
+  evently.trace:
+    image: jaegertracing/all-in-one:1.72.0
+    container_name: evently.jaeger
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "16686:16686"
+  
+  evently.queue:
+    image: rabbitmq:4.1.3-management-alpine
+    container_name: evently.queue
+    hostname: evently-queue
+    volumes:
+      - ./.containers/queue/data/:/var/lib/rabbitmq
+      - ./.containers/queue/log/:/var/log/rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"

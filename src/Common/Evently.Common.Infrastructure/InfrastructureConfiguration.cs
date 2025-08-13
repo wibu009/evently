@@ -10,6 +10,7 @@ using Evently.Common.Infrastructure.Caching;
 using Evently.Common.Infrastructure.Clock;
 using Evently.Common.Infrastructure.Configuration;
 using Evently.Common.Infrastructure.Data;
+using Evently.Common.Infrastructure.EventBus;
 using Evently.Common.Infrastructure.Outbox;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication;
@@ -18,6 +19,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Npgsql;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Quartz;
 using StackExchange.Redis;
 
@@ -25,8 +28,9 @@ namespace Evently.Common.Infrastructure;
 
 public static class InfrastructureConfiguration
 {
-    public static void AddCoreServices(
+    public static void AddInfrastructure(
         this IServiceCollection services,
+        string serviceName,
         IConfiguration configuration)
     {
         #region Clock
@@ -76,12 +80,21 @@ public static class InfrastructureConfiguration
         #endregion
         
         #region EventBus
+        
+        var rabbitMqSettings = new RabbitMqSettings(configuration.GetConnectionStringOrThrow("Queue"));
 
         services.AddMassTransit(configure =>
         {
-            configure.SetKebabCaseEndpointNameFormatter();
-            configure.UsingInMemory((context, cfg) =>
+            configure.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter(
+                prefix: serviceName.ToLowerInvariant().Replace(".", "-"),
+                includeNamespace: false));
+            configure.UsingRabbitMq((context, cfg) =>
             {
+                cfg.Host(new Uri(rabbitMqSettings.Host), h =>
+                {
+                    h.Username(rabbitMqSettings.Username);
+                    h.Password(rabbitMqSettings.Password);
+                });
                 cfg.ConfigureEndpoints(context);
             });
         });
@@ -114,6 +127,26 @@ public static class InfrastructureConfiguration
 
         services.AddQuartz();
         services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
+
+        #endregion
+
+        #region  OpenTelemetry
+
+        services
+            .AddOpenTelemetry()
+            .ConfigureResource(resourceBuilder => resourceBuilder.AddService(serviceName))
+            .WithTracing(tracingBuilder =>
+            {
+                tracingBuilder
+                    .AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddEntityFrameworkCoreInstrumentation()
+                    .AddRedisInstrumentation()
+                    .AddNpgsql()
+                    .AddSource(MassTransit.Logging.DiagnosticHeaders.DefaultListenerName);
+
+                tracingBuilder.AddOtlpExporter();
+            });
 
         #endregion
     }
