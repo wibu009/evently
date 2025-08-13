@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.EnvironmentVariables;
 using Testcontainers.PostgreSql;
+using Testcontainers.RabbitMq;
 using Testcontainers.Redis;
 
 namespace Evently.Modules.Ticketing.IntegrationTests.Abstractions;
@@ -20,6 +21,11 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
     private readonly RedisContainer _redisContainer = new RedisBuilder()
         .WithImage("redis:8.0.2")
         .Build();
+    private readonly RabbitMqContainer _rabbitMqContainer = new RabbitMqBuilder()
+        .WithImage("rabbitmq:4.1.3-management-alpine")
+        .WithUsername("guest")
+        .WithPassword("guest")
+        .Build();
     
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -35,19 +41,20 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
         
         Environment.SetEnvironmentVariable("ConnectionStrings:Database", _dbContainer.GetConnectionString());
         Environment.SetEnvironmentVariable("ConnectionStrings:Cache", _redisContainer.GetConnectionString());
+        Environment.SetEnvironmentVariable("ConnectionStrings:Queue", _rabbitMqContainer.GetConnectionString());
     }
     
     public async Task InitializeAsync()
     {
         await _dbContainer.StartAsync();
         await _redisContainer.StartAsync();
+        await _rabbitMqContainer.StartAsync();
     }
 
     public new async Task DisposeAsync()
     {
         await _dbContainer.StopAsync();
         await _redisContainer.StopAsync();
+        await _rabbitMqContainer.StopAsync();
     }
 }
-
-#pragma warning restore CA1515
