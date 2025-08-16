@@ -48,7 +48,6 @@ builder.Services
 
 WebApplication app = builder.Build();
 
-// Middleware pipeline
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
