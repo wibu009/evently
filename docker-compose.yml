@@ -18,6 +18,16 @@ services:
     ports:
       - "5000:8080"
       - "5001:8081"
+  
+  evently.ticketing.api:
+    image: ${DOCKER_REGISTRY-}evently-ticketing-api
+    container_name: evently.ticketing.api
+    build:
+      context: .
+      dockerfile: src/API/Evently.Ticketing.Api/Dockerfile
+    ports:
+      - "5004:8080"
+      - "5005:8081"
 
   evently.db:
     image: postgres:17.5
