@@ -22,6 +22,11 @@
         <Using Include="Xunit"/>
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="..\..\src\API\Evently.Api\Evently.Api.csproj" />
+        <ProjectReference Include="..\..\src\API\Evently.Api\Evently.Api.csproj">
+            <Aliases>EventlyApi</Aliases>
+        </ProjectReference>
+        <ProjectReference Include="..\..\src\API\Evently.Ticketing.Api\Evently.Ticketing.Api.csproj">
+            <Aliases>TicketingApi</Aliases>
+        </ProjectReference>
     </ItemGroup>
 </Project>
