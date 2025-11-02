@@ -21,6 +21,7 @@ internal sealed class GetOrdersQueryHandler(
                  customer_id AS {nameof(OrderResponse.CustomerId)},
                  status AS {nameof(OrderResponse.Status)},
                  total_price AS {nameof(OrderResponse.TotalPrice)},
+                 currency AS {nameof(OrderResponse.Currency)},
                  created_at_utc AS {nameof(OrderResponse.CreatedAtUtc)}
              FROM ticketing.orders
              WHERE customer_id = @CustomerId

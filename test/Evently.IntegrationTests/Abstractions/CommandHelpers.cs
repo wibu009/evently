@@ -1,4 +1,5 @@
-﻿using Bogus;
+﻿#pragma warning disable S125
+using Bogus;
 using Evently.Common.Domain;
 using Evently.Modules.Ticketing.Application.Events.CreateEvent;
 using FluentAssertions;
@@ -36,3 +37,4 @@ internal static class CommandHelpers
         result.IsSuccess.Should().BeTrue();
     }
 }
+#pragma warning restore S125
