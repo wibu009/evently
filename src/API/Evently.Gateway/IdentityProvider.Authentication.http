@@ -1,0 +1,24 @@
+@host = http://localhost:18080
+@realm = evently
+@client_id = evently-public-client
+@username = test@test.com
+@password = 123456
+@refresh_token = <your_refresh_token_here>
+
+### 🔐 Get Access Token from Keycloak (ROPC)
+POST {{host}}/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&
+client_id={{client_id}}&
+username={{username}}&
+password={{password}}&
+scope=openid email
+
+### 🔄 Refresh Access Token from Keycloak
+POST {{host}}/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=refresh_token&
+client_id={{client_id}}&
+refresh_token={{refresh_token}}

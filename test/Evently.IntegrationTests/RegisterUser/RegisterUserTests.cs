@@ -7,35 +7,29 @@ using FluentAssertions;
 
 namespace Evently.IntegrationTests.RegisterUser;
 
-public class RegisterUserTests(IntegrationTestWebAppFactory factory) : BaseIntegrationTest(factory)
+[Collection(nameof(DistributedIntegrationTestCollection))]
+public class RegisterUserTests(DistributedIntegrationTestFixture fixture) : DistributedIntegrationTest(fixture)
 {
     [Fact]
     public async Task RegisterUser_Should_PropagateToTicketingModule()
     {
-        // Register user
         var command = new RegisterUserCommand(
             Faker.Internet.Email(),
             Faker.Internet.Password(6),
             Faker.Name.FirstName(),
             Faker.Name.LastName());
 
-        Result<Guid> userResult = await Sender.Send(command);
-
+        Result<Guid> userResult = await EventlySender.Send(command);
         userResult.IsSuccess.Should().BeTrue();
 
-        // Get customer
         Result<CustomerResponse> customerResult = await Poller.WaitAsync(
             TimeSpan.FromSeconds(15),
             async () =>
             {
                 var query = new GetCustomerQuery(userResult.Value);
-
-                Result<CustomerResponse> customerResult = await Sender.Send(query);
-
-                return customerResult;
+                return await TicketingSender.Send(query);
             });
 
-        // Assert
         customerResult.IsSuccess.Should().BeTrue();
         customerResult.Value.Should().NotBeNull();
     }
@@ -43,30 +37,23 @@ public class RegisterUserTests(IntegrationTestWebAppFactory factory) : BaseInteg
     [Fact]
     public async Task RegisterUser_Should_PropagateToAttendanceModule()
     {
-        // Register user
         var command = new RegisterUserCommand(
             Faker.Internet.Email(),
             Faker.Internet.Password(6),
             Faker.Name.FirstName(),
             Faker.Name.LastName());
 
-        Result<Guid> userResult = await Sender.Send(command);
-
+        Result<Guid> userResult = await EventlySender.Send(command);
         userResult.IsSuccess.Should().BeTrue();
 
-        // Get attendee
         Result<AttendeeResponse> attendeeResult = await Poller.WaitAsync(
             TimeSpan.FromSeconds(15),
             async () =>
             {
                 var query = new GetAttendeeQuery(userResult.Value);
-
-                Result<AttendeeResponse> customerResult = await Sender.Send(query);
-
-                return customerResult;
+                return await EventlySender.Send(query);
             });
 
-        // Assert
         attendeeResult.IsSuccess.Should().BeTrue();
         attendeeResult.Value.Should().NotBeNull();
     }

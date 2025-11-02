@@ -7,47 +7,42 @@ using FluentAssertions;
 
 namespace Evently.IntegrationTests.AddToCart;
 
-public class AddItemToCartTests(IntegrationTestWebAppFactory factory) : BaseIntegrationTest(factory)
+[Collection(nameof(DistributedIntegrationTestCollection))]
+public class AddItemToCartTests(DistributedIntegrationTestFixture fixture) : DistributedIntegrationTest(fixture)
 {
     private const decimal Quantity = 10;
 
     [Fact]
     public async Task Customer_ShouldBeAbleTo_AddItemToCart()
     {
-        // Register user
-        var command = new RegisterUserCommand(
+        var register = new RegisterUserCommand(
             Faker.Internet.Email(),
             Faker.Internet.Password(6),
             Faker.Name.FirstName(),
             Faker.Name.LastName());
 
-        Result<Guid> userResult = await Sender.Send(command);
-
+        Result<Guid> userResult = await EventlySender.Send(register);
         userResult.IsSuccess.Should().BeTrue();
-
-        // Get customer
+        
         Result<CustomerResponse> customerResult = await Poller.WaitAsync(
             TimeSpan.FromSeconds(15),
             async () =>
             {
                 var query = new GetCustomerQuery(userResult.Value);
-
-                Result<CustomerResponse> customerResult = await Sender.Send(query);
-
-                return customerResult;
+                return await TicketingSender.Send(query);
             });
 
         customerResult.IsSuccess.Should().BeTrue();
-
-        // Add item to cart
         CustomerResponse customer = customerResult.Value;
+
         var ticketTypeId = Guid.CreateVersion7();
+        var eventId = Guid.CreateVersion7();
+        
+        await TicketingSender.CreateEventAsync(eventId, ticketTypeId, Quantity);
+        
+        var addCommand = new AddItemToCartCommand(customer.Id, ticketTypeId, Quantity);
+        Result addResult = await TicketingSender.Send(addCommand);
 
-        await Sender.CreateEventAsync(Guid.CreateVersion7(), ticketTypeId, Quantity);
-
-        Result result = await Sender.Send(new AddItemToCartCommand(customer.Id, ticketTypeId, Quantity));
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
+        addResult.IsSuccess.Should().BeTrue();
     }
 }

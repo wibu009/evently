@@ -15,6 +15,8 @@ using Evently.Modules.Users.Infrastructure.Identity;
 using Evently.Modules.Users.Infrastructure.Inbox;
 using Evently.Modules.Users.Infrastructure.Outbox;
 using Evently.Modules.Users.Infrastructure.Users;
+using Evently.Modules.Users.IntegrationEvents.Users;
+using Evently.Modules.Users.Presentation.Users;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -138,9 +140,21 @@ public static class UsersModule
                     .Single())
                 .ToArray();
             
+            Type[] consumerTypes = presentationAssembly
+                .GetTypes()
+                .Where(t => !t.IsAbstract && !t.IsInterface)
+                .Where(t => t.GetInterfaces()
+                    .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IConsumer<>)))
+                .ToArray();
+            
             foreach (Type eventType in integrationEventTypes)
             {
                 Type consumerType = typeof(IntegrationEventConsumer<>).MakeGenericType(eventType);
+                cfg.AddConsumer(consumerType);
+            }
+
+            foreach (Type consumerType in consumerTypes)
+            {
                 cfg.AddConsumer(consumerType);
             }
         });
