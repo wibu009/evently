@@ -29,17 +29,28 @@ services:
       - "5004:8080"
       - "5005:8081"
 
-  evently.db:
+  evently.write.db:
     image: postgres:17.5
-    container_name: evently.database
+    container_name: evently.write.database
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=evently
     volumes:
-      - ./.containers/database:/var/lib/postgresql/data
+      - ./.containers/database/write:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+  
+  evently.read.db:
+    image: mongo:8.2
+    container_name: evently.read.database
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin
+    volumes:
+      - ./.containers/database/read:/data/db
+    ports:
+      - "27017:27017"
   
   evently.idp:
     image: quay.io/keycloak/keycloak:26.2.4

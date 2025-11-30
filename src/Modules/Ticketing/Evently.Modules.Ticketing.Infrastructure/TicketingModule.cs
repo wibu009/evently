@@ -49,11 +49,11 @@ public static class TicketingModule
     {
         #region Database
 
-        string databaseConnectionString = configuration.GetConnectionStringOrThrow("Database");
+        string writeDatabaseConnectionString = configuration.GetConnectionStringOrThrow("WriteDatabase");
         
         services.AddDbContext<TicketingDbContext>((sp, options) => options
             .UseNpgsql(
-                databaseConnectionString,
+                writeDatabaseConnectionString,
                 npgsqlOptionsAction => npgsqlOptionsAction
                     .MigrationsHistoryTable(HistoryRepository.DefaultTableName, Schemas.Ticketing))
             .UseSnakeCaseNamingConvention()

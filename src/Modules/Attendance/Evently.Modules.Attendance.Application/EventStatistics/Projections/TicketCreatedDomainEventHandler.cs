@@ -6,7 +6,9 @@ using Evently.Modules.Attendance.Domain.Tickets;
 
 namespace Evently.Modules.Attendance.Application.EventStatistics.Projections;
 
-internal sealed class TicketCreatedDomainEventHandler(IDbConnectionFactory dbConnectionFactory)
+internal sealed class TicketCreatedDomainEventHandler(
+    IDbConnectionFactory dbConnectionFactory,
+    IEventStatisticsRepository eventStatisticsRepository)
     : DomainEventHandler<TicketCreatedDomainEvent>
 {
     public override async Task Handle(TicketCreatedDomainEvent domainEvent, CancellationToken cancellationToken = default)
@@ -15,14 +17,22 @@ internal sealed class TicketCreatedDomainEventHandler(IDbConnectionFactory dbCon
         
         const string sql =
             """
-            UPDATE attendance.event_statistics es
-            SET tickets_sold = (
-                SELECT COUNT(*)
-                FROM attendance.tickets t
-                WHERE t.event_id = es.event_id)
-            WHERE es.event_id = @EventId
+            SELECT COUNT(*)
+            FROM attendance.tickets t
+            WHERE t.event_id = @EventId
             """;
-
-        await connection.ExecuteAsync(sql, domainEvent);
+        
+        int ticketCount = await connection.ExecuteScalarAsync<int>(sql, domainEvent);
+        
+        EventStatistics eventStatistics = await eventStatisticsRepository.GetAsync(domainEvent.EventId, cancellationToken);
+        
+        if (eventStatistics is null)
+        {
+            throw new InvalidOperationException($"EventStatistics with id {domainEvent.EventId} not found");
+        }
+        
+        eventStatistics.TicketsSold = ticketCount;
+        
+        await eventStatisticsRepository.ReplaceAsync(eventStatistics, cancellationToken);
     }
 }
