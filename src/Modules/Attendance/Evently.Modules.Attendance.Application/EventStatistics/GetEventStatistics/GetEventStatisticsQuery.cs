@@ -2,4 +2,4 @@
 
 namespace Evently.Modules.Attendance.Application.EventStatistics.GetEventStatistics;
 
-public sealed record GetEventStatisticsQuery(Guid EventId) : IQuery<EventStatisticsResponse>;
+public sealed record GetEventStatisticsQuery(Guid EventId) : IQuery<EventStatistics>;

@@ -1,17 +1,16 @@
-﻿using Evently.Modules.Attendance.Domain.Events;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
+﻿using Evently.Common.Infrastructure.Data;
+using Evently.Modules.Attendance.Application.EventStatistics;
+using Evently.Modules.Attendance.Domain.Events;
 
 namespace Evently.Modules.Attendance.Infrastructure.Events;
 
-internal sealed class EventStatisticsConfiguration : IEntityTypeConfiguration<EventStatistics>
+internal sealed class EventStatisticsConfiguration : IDocumentConfiguration<EventStatistics>
 {
-    public void Configure(EntityTypeBuilder<EventStatistics> builder)
+    public void Configure(DocumentDataBuilder<EventStatistics> dataBuilder)
     {
-        builder.ToTable("event_statistics");
+        dataBuilder.ToCollection("event-statistics");
+        dataBuilder.MapId(e => e.EventId);
 
-        builder.HasKey(es => es.EventId);
-
-        builder.Property(es => es.EventId).ValueGeneratedNever();
+        dataBuilder.IndexAscending(e => e.EventId); 
     }
 }

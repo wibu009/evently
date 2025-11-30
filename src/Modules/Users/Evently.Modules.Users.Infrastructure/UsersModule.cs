@@ -40,11 +40,11 @@ public static class UsersModule
     {
         #region Database
 
-        string databaseConnectionString = configuration.GetConnectionStringOrThrow("Database");
+        string writeDatabaseConnectionString = configuration.GetConnectionStringOrThrow("WriteDatabase");
 
         services.AddDbContext<UsersDbContext>((sp, options)
             => options
-                .UseNpgsql(databaseConnectionString, npgsqlOptions => npgsqlOptions
+                .UseNpgsql(writeDatabaseConnectionString, npgsqlOptions => npgsqlOptions
                     .MigrationsHistoryTable(HistoryRepository.DefaultTableName, Schemas.Users))
                 .UseSnakeCaseNamingConvention()
                 .AddInterceptors(sp.GetRequiredService<InsertOutboxMessagesInterceptor>()));

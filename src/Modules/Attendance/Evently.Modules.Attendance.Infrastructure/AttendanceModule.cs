@@ -6,6 +6,7 @@ using Evently.Common.Infrastructure.Configuration;
 using Evently.Common.Infrastructure.Outbox;
 using Evently.Common.Presentation.Endpoints;
 using Evently.Modules.Attendance.Application.Abstractions.Data;
+using Evently.Modules.Attendance.Application.EventStatistics;
 using Evently.Modules.Attendance.Domain.Attendees;
 using Evently.Modules.Attendance.Domain.Events;
 using Evently.Modules.Attendance.Domain.Tickets;
@@ -28,6 +29,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using MongoDB.Driver;
 
 namespace Evently.Modules.Attendance.Infrastructure;
 
@@ -47,19 +49,26 @@ public static class AttendanceModule
         services.AddDbContext<AttendanceDbContext>((sp, options) =>
             options
                 .UseNpgsql(
-                    configuration.GetConnectionStringOrThrow("Database"),
+                    configuration.GetConnectionStringOrThrow("WriteDatabase"),
                     npgsqlOptions => npgsqlOptions
                         .MigrationsHistoryTable(HistoryRepository.DefaultTableName, Schemas.Attendance))
                 .UseSnakeCaseNamingConvention()
                 .AddInterceptors(sp.GetRequiredService<InsertOutboxMessagesInterceptor>()));
         
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<AttendanceDbContext>());
+        
+        services.AddSingleton<AttendanceDocumentDataStore>(sp =>
+        {
+            IMongoClient client = sp.GetRequiredService<IMongoClient>();
+            return new AttendanceDocumentDataStore(client, "evently-attendance");
+        });
 
         #endregion
 
         #region Events
         
         services.AddScoped<IEventRepository, EventRepository>();
+        services.AddScoped<IEventStatisticsRepository, EventStatisticsRepository>();
 
         #endregion
 

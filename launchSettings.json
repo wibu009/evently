@@ -4,8 +4,9 @@
       "commandName": "DockerCompose",
       "commandVersion": "1.0",
       "serviceActions": {
+        "evently.gateway": "StartDebugging",
         "evently.api": "StartDebugging",
-        "evently.gateway": "StartDebugging"
+        "evently.ticketing.api": "StartDebugging"
       }
     }
   }

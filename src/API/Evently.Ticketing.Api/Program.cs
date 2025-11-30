@@ -7,6 +7,7 @@ using Evently.Ticketing.Api.Middleware;
 using Evently.Ticketing.Api.OpenTelemetry;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using MongoDB.Driver;
 using RabbitMQ.Client;
 using Scalar.AspNetCore;
 using Serilog;
@@ -31,7 +32,8 @@ builder.Services.AddOpenApiDocumentation();
 
 builder.Services
     .AddHealthChecks()
-    .AddNpgSql(builder.Configuration.GetConnectionStringOrThrow("Database"))
+    .AddNpgSql(builder.Configuration.GetConnectionStringOrThrow("WriteDatabase"))
+    .AddMongoDb(_ => new MongoClient(builder.Configuration.GetConnectionStringOrThrow("ReadDatabase")))
     .AddRedis(builder.Configuration.GetConnectionStringOrThrow("Cache"))
     .AddRabbitMQ(_ => new ConnectionFactory
         {

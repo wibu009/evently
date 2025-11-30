@@ -41,11 +41,11 @@ public static class EventsModule
     {
         #region Database
 
-        string databaseConnectionString = configuration.GetConnectionStringOrThrow("Database");
+        string writeDatabaseConnectionString = configuration.GetConnectionStringOrThrow("WriteDatabase");
 
         services.AddDbContext<EventsDbContext>((sp, options) => options
             .UseNpgsql(
-                databaseConnectionString,
+                writeDatabaseConnectionString,
                 npgsqlOptionsAction => npgsqlOptionsAction
                     .MigrationsHistoryTable(HistoryRepository.DefaultTableName, Schemas.Events))
             .UseSnakeCaseNamingConvention()

@@ -18,6 +18,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Serializers;
+using MongoDB.Driver;
+using MongoDB.Driver.Core.Extensions.DiagnosticSources;
 using Npgsql;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -41,14 +46,31 @@ public static class InfrastructureConfiguration
 
         #region Data
 
-        string databaseConnectionString = configuration.GetConnectionStringOrThrow("Database");
+        string writeDatabaseConnectionString = configuration.GetConnectionStringOrThrow("WriteDatabase");
         
-        NpgsqlDataSource npgsqlDataSource = new NpgsqlDataSourceBuilder(databaseConnectionString).Build();
+        NpgsqlDataSource npgsqlDataSource = new NpgsqlDataSourceBuilder(writeDatabaseConnectionString).Build();
         services.TryAddSingleton(npgsqlDataSource);
 
         services.AddScoped<IDbConnectionFactory, DbConnectionFactory>();
         
         SqlMapper.AddTypeHandler(new GenericArrayHandler<string>());
+        
+        string readDatabaseConnectionString = configuration.GetConnectionStringOrThrow("ReadDatabase");
+
+        var mongoClientSettings = MongoClientSettings.FromConnectionString(readDatabaseConnectionString);
+
+        mongoClientSettings.ClusterConfigurator = c => c.Subscribe(
+            new DiagnosticsActivityEventSubscriber(
+                new InstrumentationOptions()
+                {
+                    CaptureCommandText = true,
+                }));
+        
+#pragma warning disable CA2000
+        services.AddSingleton<IMongoClient>(new MongoClient(mongoClientSettings));
+#pragma warning restore CA2000
+        
+        BsonSerializer.TryRegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
 
         #endregion
 
@@ -143,7 +165,8 @@ public static class InfrastructureConfiguration
                     .AddEntityFrameworkCoreInstrumentation()
                     .AddRedisInstrumentation()
                     .AddNpgsql()
-                    .AddSource(MassTransit.Logging.DiagnosticHeaders.DefaultListenerName);
+                    .AddSource(MassTransit.Logging.DiagnosticHeaders.DefaultListenerName)
+                    .AddSource("MongoDB.Driver.Core.Extensions.DiagnosticSources");
 
                 tracingBuilder.AddOtlpExporter();
             });

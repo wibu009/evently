@@ -15,7 +15,7 @@ public class GetEventStatisticsTests(IntegrationTestWebAppFactory factory) : Bas
         var query = new GetEventStatisticsQuery(Guid.CreateVersion7());
 
         // Act
-        Result<EventStatisticsResponse> result = await Sender.Send(query);
+        Result<Application.EventStatistics.EventStatistics> result = await Sender.Send(query);
 
         // Assert
         result.Error.Should().Be(EventErrors.NotFound(query.EventId));

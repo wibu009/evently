@@ -1,25 +1,30 @@
-﻿using System.Data.Common;
-using Dapper;
-using Evently.Common.Application.Data;
-using Evently.Common.Application.Messaging;
+﻿using Evently.Common.Application.Messaging;
 using Evently.Modules.Attendance.Domain.Attendees;
 
 namespace Evently.Modules.Attendance.Application.EventStatistics.Projections;
 
-internal sealed class DuplicateCheckInAttemptedDomainEventHandler(IDbConnectionFactory dbConnectionFactory)
+internal sealed class DuplicateCheckInAttemptedDomainEventHandler(
+    IEventStatisticsRepository eventStatisticsRepository)
     : DomainEventHandler<DuplicateCheckInAttemptedDomainEvent>
 {
     public override async Task Handle(DuplicateCheckInAttemptedDomainEvent domainEvent, CancellationToken cancellationToken = default)
     {
-        await using DbConnection connection = await dbConnectionFactory.OpenConnectionAsync(cancellationToken);
+        EventStatistics eventStatistics =
+            await eventStatisticsRepository.GetAsync(domainEvent.EventId, cancellationToken);
         
-        const string sql =
-            """
-            UPDATE attendance.event_statistics es
-            SET duplicate_check_in_tickets = array_append(duplicate_check_in_tickets, @TicketCode)
-            WHERE es.event_id = @EventId
-            """;
+        if (eventStatistics is null)
+        {
+            throw new InvalidOperationException($"EventStatistics with id {domainEvent.EventId} not found");
+        }
 
-        await connection.ExecuteAsync(sql, domainEvent);
+        eventStatistics.DuplicateCheckInTickets.Add(new TicketModel
+        {
+            AttendeeId = domainEvent.AttendeeId,
+            EventId = domainEvent.EventId,
+            TicketId = domainEvent.TicketId,
+            TicketCode = domainEvent.TicketCode
+        });
+
+        await eventStatisticsRepository.ReplaceAsync(eventStatistics, cancellationToken);
     }
 }
