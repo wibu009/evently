@@ -12,11 +12,13 @@ public class DocumentDataBuilder<T>
     public string CollectionName { get; private set; }
     public List<CreateIndexModel<T>> Indexes { get; } = [];
     
+#pragma warning disable IDE0052
+#pragma warning disable CS0414 // Field is assigned but its value is never used
 #pragma warning disable S4487
-#pragma warning disable CS0414
     private bool _useAutoMap = true;
-#pragma warning restore CS0414
 #pragma warning restore S4487
+#pragma warning restore CS0414 // Field is assigned but its value is never used
+#pragma warning restore IDE0052
 
     public DocumentDataBuilder()
     {
