@@ -59,6 +59,19 @@ via the `evently.web` service):
 docker compose up -d --build
 ```
 
+That single command is enough on a machine with only Docker installed: each app service
+waits (via health checks) for Postgres, MongoDB, Redis, RabbitMQ, and Keycloak to become
+healthy, applies its migrations, and — in the Development environment this compose file
+sets — seeds the sample catalog and demo accounts automatically.
+
+To wipe all state and reseed from scratch:
+
+```bash
+docker compose down
+Remove-Item -Recurse -Force ./.containers   # PowerShell; `rm -rf ./.containers` on Linux/macOS
+docker compose up -d --build
+```
+
 ### Signing in
 
 The app uses **branded in-app login/signup pages** (`/login`, `/register`) with Keycloak
@@ -157,21 +170,20 @@ To run the tests, use the following command in the solution directory:
 dotnet test
 ```
 
+Integration tests spin up their own Postgres/MongoDB containers via Testcontainers, so a
+running Docker daemon is required; no other environment setup is needed.
+
 ## 🔧 Troubleshooting
 
-- If you encounter issues, check the logs of the individual services using:
+- Check the logs of the individual services:
 
   ```bash
-  docker-compose logs -f
+  docker compose logs -f
   ```
 
-- For database migrations, use the following command:
-
-  ```bash
-  dotnet ef database update
-  ```
-
-  Ensure the correct connection string is set in the environment variables.
+- Each service exposes health endpoints (`/health`, `/alive`); the compose file already
+  orders startup by health checks, so a service that restarts is usually waiting on an
+  infrastructure dependency — check that service's logs first.
 
 ## 📄 License
 

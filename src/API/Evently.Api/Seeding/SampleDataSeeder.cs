@@ -319,6 +319,23 @@ internal sealed class SampleDataSeeder(
 
         foreach (RegisterUserCommand command in demoUsers)
         {
+            await RegisterDemoUserWithRetryAsync(sender, command);
+        }
+    }
+
+    /// <summary>
+    /// Registers a demo user, retrying briefly so that orchestrations that gate on
+    /// container start (rather than IdP health) still succeed on a cold first run.
+    /// </summary>
+    private async Task RegisterDemoUserWithRetryAsync(ISender sender, RegisterUserCommand command)
+    {
+        const int maxAttempts = 5;
+        const int delaySeconds = 10;
+
+        int attempt = 1;
+
+        while (true)
+        {
             try
             {
                 Result<Guid> result = await sender.Send(command);
@@ -335,13 +352,30 @@ internal sealed class SampleDataSeeder(
                 {
                     logger.LogWarning("Sample data seeding failed while registering {Email}: {Error}", command.Email, result.Error.Description);
                 }
+
+                return;
             }
             catch (Exception exception)
             {
-                logger.LogWarning(
-                    exception,
-                    "Sample data seeding could not reach the identity provider while registering {Email}",
-                    command.Email);
+                if (attempt >= maxAttempts)
+                {
+                    logger.LogWarning(
+                        exception,
+                        "Sample data seeding could not reach the identity provider while registering {Email}",
+                        command.Email);
+
+                    return;
+                }
+
+                logger.LogInformation(
+                    "Identity provider not reachable yet; retrying demo user {Email} ({Attempt}/{Max})",
+                    command.Email,
+                    attempt,
+                    maxAttempts);
+
+                await Task.Delay(TimeSpan.FromSeconds(delaySeconds));
+
+                attempt++;
             }
         }
     }
