@@ -24,5 +24,6 @@
     
     <ItemGroup>
       <ProjectReference Include="..\..\Modules\Ticketing\Evently.Modules.Ticketing.Infrastructure\Evently.Modules.Ticketing.Infrastructure.csproj" />
+      <ProjectReference Include="..\..\Aspire\Evently.ServiceDefaults\Evently.ServiceDefaults.csproj" />
     </ItemGroup>
 </Project>

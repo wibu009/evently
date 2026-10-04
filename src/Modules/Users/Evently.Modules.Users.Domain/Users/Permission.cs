@@ -16,7 +16,17 @@ public sealed class Permission
     public static readonly Permission RemoveFromCart = new("carts:remove");
     public static readonly Permission GetOrders = new("orders:read");
     public static readonly Permission CreateOrder = new("orders:create");
+    public static readonly Permission CancelOrder = new("orders:cancel");
+    public static readonly Permission GetPayments = new("payments:read");
+    public static readonly Permission RefundPayments = new("payments:refund");
     public static readonly Permission GetTickets = new("tickets:read");
+    public static readonly Permission TransferTicket = new("tickets:transfer");
+    public static readonly Permission GetWaitingList = new("waiting-lists:read");
+    public static readonly Permission JoinWaitingList = new("waiting-lists:join");
+    public static readonly Permission LeaveWaitingList = new("waiting-lists:remove");
+    public static readonly Permission GetPromoCodes = new("promo-codes:read");
+    public static readonly Permission CreatePromoCode = new("promo-codes:create");
+    public static readonly Permission RemovePromoCode = new("promo-codes:remove");
     public static readonly Permission CheckInTicket = new("tickets:check-in");
     public static readonly Permission GetEventStatistics = new("event-statistics:read");
     

@@ -5,7 +5,8 @@ namespace Evently.Modules.Ticketing.Application.Orders.GetOrders;
 public sealed record OrderResponse(
     Guid Id,
     Guid CustomerId,
-    OrderStatus Status,
+    string Status,
     decimal TotalPrice,
+    decimal DiscountAmount,
     string Currency,
     DateTime CreatedAtUtc);

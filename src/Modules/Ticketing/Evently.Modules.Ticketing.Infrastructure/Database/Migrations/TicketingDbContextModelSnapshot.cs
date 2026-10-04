@@ -253,18 +253,36 @@ namespace Evently.Modules.Ticketing.Infrastructure.Database.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("CancellationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("cancellation_reason");
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at_utc");
 
                     b.Property<string>("Currency")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
                         .HasColumnName("currency");
 
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("uuid")
                         .HasColumnName("customer_id");
+
+                    b.Property<decimal>("DiscountAmount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("discount_amount");
+
+                    b.Property<DateTime?>("PaymentDueUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("payment_due_utc");
+
+                    b.Property<Guid?>("PromoCodeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("promo_code_id");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer")
@@ -283,6 +301,9 @@ namespace Evently.Modules.Ticketing.Infrastructure.Database.Migrations
 
                     b.HasIndex("CustomerId")
                         .HasDatabaseName("ix_orders_customer_id");
+
+                    b.HasIndex("Status", "PaymentDueUtc")
+                        .HasDatabaseName("ix_orders_status_payment_due_utc");
 
                     b.ToTable("orders", "ticketing");
                 });
@@ -351,20 +372,35 @@ namespace Evently.Modules.Ticketing.Infrastructure.Database.Migrations
 
                     b.Property<string>("Currency")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
                         .HasColumnName("currency");
+
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("failure_reason");
 
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uuid")
                         .HasColumnName("order_id");
 
+                    b.Property<DateTime?>("PaidAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("paid_at_utc");
+
                     b.Property<DateTime?>("RefundedAtUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("refunded_at_utc");
 
-                    b.Property<Guid>("TransactionId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("transaction_id");
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<string>("TransactionReference")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("transaction_reference");
 
                     b.HasKey("Id")
                         .HasName("pk_payments");
@@ -372,11 +408,64 @@ namespace Evently.Modules.Ticketing.Infrastructure.Database.Migrations
                     b.HasIndex("OrderId")
                         .HasDatabaseName("ix_payments_order_id");
 
-                    b.HasIndex("TransactionId")
+                    b.HasIndex("TransactionReference")
                         .IsUnique()
-                        .HasDatabaseName("ix_payments_transaction_id");
+                        .HasDatabaseName("ix_payments_transaction_reference");
 
                     b.ToTable("payments", "ticketing");
+                });
+
+            modelBuilder.Entity("Evently.Modules.Ticketing.Domain.PromoCodes.PromoCode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("code");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("currency");
+
+                    b.Property<int>("DiscountType")
+                        .HasColumnType("integer")
+                        .HasColumnName("discount_type");
+
+                    b.Property<decimal>("DiscountValue")
+                        .HasColumnType("numeric")
+                        .HasColumnName("discount_value");
+
+                    b.Property<int?>("MaxRedemptions")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_redemptions");
+
+                    b.Property<int>("TimesRedeemed")
+                        .HasColumnType("integer")
+                        .HasColumnName("times_redeemed");
+
+                    b.Property<DateTime>("ValidFromUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("valid_from_utc");
+
+                    b.Property<DateTime?>("ValidUntilUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("valid_until_utc");
+
+                    b.HasKey("Id")
+                        .HasName("pk_promo_codes");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_promo_codes_code");
+
+                    b.ToTable("promo_codes", "ticketing");
                 });
 
             modelBuilder.Entity("Evently.Modules.Ticketing.Domain.Tickets.Ticket", b =>
@@ -436,6 +525,46 @@ namespace Evently.Modules.Ticketing.Infrastructure.Database.Migrations
                         .HasDatabaseName("ix_tickets_ticket_type_id");
 
                     b.ToTable("tickets", "ticketing");
+                });
+
+            modelBuilder.Entity("Evently.Modules.Ticketing.Domain.WaitingList.WaitingListEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("customer_id");
+
+                    b.Property<DateTime?>("NotifiedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("notified_at_utc");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TicketTypeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ticket_type_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_waiting_list_entries");
+
+                    b.HasIndex("TicketTypeId", "CustomerId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_waiting_list_entries_ticket_type_id_customer_id");
+
+                    b.HasIndex("TicketTypeId", "Status")
+                        .HasDatabaseName("ix_waiting_list_entries_ticket_type_id_status");
+
+                    b.ToTable("waiting_list_entries", "ticketing");
                 });
 
             modelBuilder.Entity("Evently.Modules.Ticketing.Domain.Events.TicketType", b =>

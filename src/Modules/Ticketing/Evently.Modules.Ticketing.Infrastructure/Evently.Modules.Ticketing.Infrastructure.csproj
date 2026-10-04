@@ -4,4 +4,7 @@
       <ProjectReference Include="..\Evently.Modules.Ticketing.Application\Evently.Modules.Ticketing.Application.csproj" />
       <ProjectReference Include="..\Evently.Modules.Ticketing.Presentation\Evently.Modules.Ticketing.Presentation.csproj" />
     </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="Stripe.net" Version="52.4.2" />
+    </ItemGroup>
 </Project>

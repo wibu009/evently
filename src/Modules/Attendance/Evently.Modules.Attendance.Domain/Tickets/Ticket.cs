@@ -35,4 +35,20 @@ public sealed class Ticket : Entity
 
         RaiseDomainEvent(new TicketUsedDomainEvent(Id));
     }
+
+    /// <summary>
+    /// Hands the ticket over to another attendee after a ticket transfer.
+    /// Tickets that were already used cannot change owners.
+    /// </summary>
+    public Result TransferTo(Guid attendeeId)
+    {
+        if (UsedAtUtc.HasValue)
+        {
+            return Result.Failure(TicketErrors.CannotTransferUsedTicket);
+        }
+
+        AttendeeId = attendeeId;
+
+        return Result.Success();
+    }
 }

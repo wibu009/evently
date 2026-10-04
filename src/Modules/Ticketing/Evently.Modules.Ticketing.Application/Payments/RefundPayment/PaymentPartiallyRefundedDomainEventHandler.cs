@@ -9,6 +9,6 @@ internal sealed class PaymentPartiallyRefundedDomainEventHandler(IPaymentService
 {
     public override async Task Handle(PaymentPartiallyRefundedDomainEvent domainEvent, CancellationToken cancellationToken = default)
     {
-        await paymentService.RefundAsync(domainEvent.TransactionId, domainEvent.RefundAmount);
+        await paymentService.RefundAsync(domainEvent.TransactionReference, domainEvent.Currency, domainEvent.RefundAmount);
     }
 }

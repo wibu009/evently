@@ -1,4 +1,4 @@
-﻿using Testcontainers.Keycloak;
+using Testcontainers.Keycloak;
 using Testcontainers.MongoDb;
 using Testcontainers.PostgreSql;
 using Testcontainers.RabbitMq;
@@ -54,10 +54,10 @@ public sealed class TestEnvironment : IAsyncLifetime
         Environment.SetEnvironmentVariable("Authentication:TokenValidationParameters:ValidIssuers", realmUrl);
         Environment.SetEnvironmentVariable("Users:KeyCloak:AdminUrl", $"{keycloakAddress}admin/realms/evently/");
         Environment.SetEnvironmentVariable("Users:KeyCloak:TokenUrl", $"{realmUrl}/protocol/openid-connect/token");
-        Environment.SetEnvironmentVariable("ConnectionStrings:WriteDatabase", _postgreSqlContainer.GetConnectionString());
-        Environment.SetEnvironmentVariable("ConnectionStrings:ReadDatabase", _mongoDbContainer.GetConnectionString());
-        Environment.SetEnvironmentVariable("ConnectionStrings:Cache", _redisContainer.GetConnectionString());
-        Environment.SetEnvironmentVariable("ConnectionStrings:Queue", _rabbitMqContainer.GetConnectionString());
+        Environment.SetEnvironmentVariable("ConnectionStrings:writedb", _postgreSqlContainer.GetConnectionString());
+        Environment.SetEnvironmentVariable("ConnectionStrings:readdatabase", _mongoDbContainer.GetConnectionString());
+        Environment.SetEnvironmentVariable("ConnectionStrings:cache", _redisContainer.GetConnectionString());
+        Environment.SetEnvironmentVariable("ConnectionStrings:queue", _rabbitMqContainer.GetConnectionString());
         
         // Outbox/Inbox poll intervals
         foreach (string module in new[]{ "Users","Events","Ticketing","Attendance" })

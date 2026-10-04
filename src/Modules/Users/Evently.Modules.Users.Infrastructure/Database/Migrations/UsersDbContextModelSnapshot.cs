@@ -200,7 +200,47 @@ namespace Evently.Modules.Users.Infrastructure.Database.Migrations
                         },
                         new
                         {
+                            Code = "orders:cancel"
+                        },
+                        new
+                        {
+                            Code = "payments:read"
+                        },
+                        new
+                        {
+                            Code = "payments:refund"
+                        },
+                        new
+                        {
                             Code = "tickets:read"
+                        },
+                        new
+                        {
+                            Code = "tickets:transfer"
+                        },
+                        new
+                        {
+                            Code = "waiting-lists:read"
+                        },
+                        new
+                        {
+                            Code = "waiting-lists:join"
+                        },
+                        new
+                        {
+                            Code = "waiting-lists:remove"
+                        },
+                        new
+                        {
+                            Code = "promo-codes:read"
+                        },
+                        new
+                        {
+                            Code = "promo-codes:create"
+                        },
+                        new
+                        {
+                            Code = "promo-codes:remove"
                         },
                         new
                         {
@@ -315,6 +355,11 @@ namespace Evently.Modules.Users.Infrastructure.Database.Migrations
                         },
                         new
                         {
+                            PermissionCode = "categories:read",
+                            RoleName = "Member"
+                        },
+                        new
+                        {
                             PermissionCode = "ticket-types:read",
                             RoleName = "Member"
                         },
@@ -335,6 +380,11 @@ namespace Evently.Modules.Users.Infrastructure.Database.Migrations
                         },
                         new
                         {
+                            PermissionCode = "events:read",
+                            RoleName = "Member"
+                        },
+                        new
+                        {
                             PermissionCode = "orders:read",
                             RoleName = "Member"
                         },
@@ -345,7 +395,37 @@ namespace Evently.Modules.Users.Infrastructure.Database.Migrations
                         },
                         new
                         {
+                            PermissionCode = "orders:cancel",
+                            RoleName = "Member"
+                        },
+                        new
+                        {
+                            PermissionCode = "payments:read",
+                            RoleName = "Member"
+                        },
+                        new
+                        {
                             PermissionCode = "tickets:read",
+                            RoleName = "Member"
+                        },
+                        new
+                        {
+                            PermissionCode = "tickets:transfer",
+                            RoleName = "Member"
+                        },
+                        new
+                        {
+                            PermissionCode = "waiting-lists:read",
+                            RoleName = "Member"
+                        },
+                        new
+                        {
+                            PermissionCode = "waiting-lists:join",
+                            RoleName = "Member"
+                        },
+                        new
+                        {
+                            PermissionCode = "waiting-lists:remove",
                             RoleName = "Member"
                         },
                         new
@@ -425,7 +505,57 @@ namespace Evently.Modules.Users.Infrastructure.Database.Migrations
                         },
                         new
                         {
+                            PermissionCode = "orders:cancel",
+                            RoleName = "Administrator"
+                        },
+                        new
+                        {
+                            PermissionCode = "payments:read",
+                            RoleName = "Administrator"
+                        },
+                        new
+                        {
+                            PermissionCode = "payments:refund",
+                            RoleName = "Administrator"
+                        },
+                        new
+                        {
                             PermissionCode = "tickets:read",
+                            RoleName = "Administrator"
+                        },
+                        new
+                        {
+                            PermissionCode = "tickets:transfer",
+                            RoleName = "Administrator"
+                        },
+                        new
+                        {
+                            PermissionCode = "waiting-lists:read",
+                            RoleName = "Administrator"
+                        },
+                        new
+                        {
+                            PermissionCode = "waiting-lists:join",
+                            RoleName = "Administrator"
+                        },
+                        new
+                        {
+                            PermissionCode = "waiting-lists:remove",
+                            RoleName = "Administrator"
+                        },
+                        new
+                        {
+                            PermissionCode = "promo-codes:read",
+                            RoleName = "Administrator"
+                        },
+                        new
+                        {
+                            PermissionCode = "promo-codes:create",
+                            RoleName = "Administrator"
+                        },
+                        new
+                        {
+                            PermissionCode = "promo-codes:remove",
                             RoleName = "Administrator"
                         },
                         new

@@ -31,6 +31,8 @@ public abstract class BaseIntegrationTest : IDisposable
             DELETE FROM ticketing.inbox_messages;
             DELETE FROM ticketing.outbox_message_consumers;
             DELETE FROM ticketing.outbox_messages;
+            DELETE FROM ticketing.waiting_list_entries;
+            DELETE FROM ticketing.promo_codes;
             DELETE FROM ticketing.events;
             DELETE FROM ticketing.ticket_types;
             DELETE FROM ticketing.customers;

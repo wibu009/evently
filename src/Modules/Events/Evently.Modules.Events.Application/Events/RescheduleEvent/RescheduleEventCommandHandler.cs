@@ -25,9 +25,13 @@ internal sealed class RescheduleEventCommandHandler(
         {
             return Result.Failure(EventErrors.StartDateInPast);
         }
-        
-        @event.Reschedule(request.StartAtUtc, request.EndAtUtc);
-        
+
+        Result result = @event.Reschedule(request.StartAtUtc, request.EndAtUtc);
+        if (result.IsFailure)
+        {
+            return Result.Failure(result.Error);
+        }
+
         await unitOfWork.SaveChangesAsync(cancellationToken);
         
         return Result.Success();

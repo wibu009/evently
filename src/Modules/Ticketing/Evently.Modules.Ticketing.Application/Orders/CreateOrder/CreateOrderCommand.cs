@@ -2,4 +2,4 @@
 
 namespace Evently.Modules.Ticketing.Application.Orders.CreateOrder;
 
-public sealed record CreateOrderCommand(Guid CustomerId) : ICommand;
+public sealed record CreateOrderCommand(Guid CustomerId, string? PromoCode = null) : ICommand<Guid>;

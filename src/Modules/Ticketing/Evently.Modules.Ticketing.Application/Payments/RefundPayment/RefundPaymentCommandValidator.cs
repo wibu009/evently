@@ -7,5 +7,10 @@ internal sealed class RefundPaymentCommandValidator : AbstractValidator<RefundPa
     public RefundPaymentCommandValidator()
     {
         RuleFor(x => x.PaymentId).NotEmpty();
+
+        RuleFor(x => x.Amount)
+            .GreaterThan(decimal.Zero)
+            .When(x => x.Amount.HasValue)
+            .WithMessage("The refund amount must be greater than zero when provided");
     }
 }

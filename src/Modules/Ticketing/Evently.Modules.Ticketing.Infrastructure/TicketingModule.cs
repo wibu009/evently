@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using Evently.Common.Application;
 using Evently.Common.Application.Authorization;
 using Evently.Common.Application.EventBus;
@@ -9,13 +9,17 @@ using Evently.Common.Presentation.Endpoints;
 using Evently.Modules.Events.IntegrationEvents.Events;
 using Evently.Modules.Events.IntegrationEvents.TicketTypes;
 using Evently.Modules.Ticketing.Application.Abstractions.Data;
+using Evently.Modules.Ticketing.Application.Abstractions.Notifications;
 using Evently.Modules.Ticketing.Application.Abstractions.Payments;
 using Evently.Modules.Ticketing.Application.Carts;
+using Evently.Modules.Ticketing.Application.Orders;
 using Evently.Modules.Ticketing.Domain.Customers;
 using Evently.Modules.Ticketing.Domain.Events;
 using Evently.Modules.Ticketing.Domain.Orders;
 using Evently.Modules.Ticketing.Domain.Payments;
+using Evently.Modules.Ticketing.Domain.PromoCodes;
 using Evently.Modules.Ticketing.Domain.Tickets;
+using Evently.Modules.Ticketing.Domain.WaitingList;
 using Evently.Modules.Ticketing.Infrastructure.Authorization;
 using Evently.Modules.Ticketing.Infrastructure.Customers;
 using Evently.Modules.Ticketing.Infrastructure.Database;
@@ -24,6 +28,9 @@ using Evently.Modules.Ticketing.Infrastructure.Inbox;
 using Evently.Modules.Ticketing.Infrastructure.Orders;
 using Evently.Modules.Ticketing.Infrastructure.Outbox;
 using Evently.Modules.Ticketing.Infrastructure.Payments;
+using Evently.Modules.Ticketing.Infrastructure.PromoCodes;
+using Evently.Modules.Ticketing.Infrastructure.WaitingList;
+using Evently.Modules.Ticketing.Infrastructure.Notifications;
 using Evently.Modules.Ticketing.Infrastructure.Tickets;
 using Evently.Modules.Users.IntegrationEvents.Users;
 using MassTransit;
@@ -33,6 +40,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Stripe;
 
 namespace Evently.Modules.Ticketing.Infrastructure;
 
@@ -49,7 +57,7 @@ public static class TicketingModule
     {
         #region Database
 
-        string writeDatabaseConnectionString = configuration.GetConnectionStringOrThrow("WriteDatabase");
+        string writeDatabaseConnectionString = configuration.GetConnectionStringOrThrow("writedb");
         
         services.AddDbContext<TicketingDbContext>((sp, options) => options
             .UseNpgsql(
@@ -85,15 +93,52 @@ public static class TicketingModule
         #region Orders
 
         services.AddScoped<IOrderRepository, OrderRepository>();
+        services.Configure<OrdersOptions>(configuration.GetSection("Ticketing:Orders"));
+        services.ConfigureOptions<ConfigureProcessOrderExpirationsJob>();
 
         #endregion
-        
+
         #region Payments
-        
+
         services.AddScoped<IPaymentRepository, PaymentRepository>();
-        services.AddSingleton<IPaymentService, PaymentService>();
-        
+
+        // Stripe is used when it is enabled and a secret key is configured.
+        // Otherwise the in-memory fake gateway keeps the local stack self-contained.
+        StripeOptions stripeOptions = configuration
+            .GetSection("Ticketing:Stripe")
+            .Get<StripeOptions>() ?? new StripeOptions();
+
+        if (stripeOptions is { Enabled: true, SecretKey.Length: > 0 })
+        {
+            services.AddSingleton(new StripeClient(stripeOptions.SecretKey));
+            services.AddSingleton(stripeOptions);
+            services.AddSingleton<IPaymentService, StripePaymentService>();
+        }
+        else
+        {
+            services.AddSingleton<IPaymentService, FakePaymentService>();
+        }
+
         #endregion
+
+        #region PromoCodes
+
+        services.AddScoped<IPromoCodeRepository, PromoCodeRepository>();
+
+        #endregion
+
+        #region WaitingList
+
+        services.AddScoped<IWaitingListRepository, WaitingListRepository>();
+
+        #endregion
+
+        #region Notifications
+
+        services.AddScoped<INotificationService, NotificationService>();
+
+        #endregion
+
         
         #region Cart
         

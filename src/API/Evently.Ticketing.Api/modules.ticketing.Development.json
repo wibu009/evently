@@ -7,6 +7,16 @@
         "Inbox": {
             "IntervalInSeconds": 15,
             "BatchSize": 20
+        },
+        "Orders": {
+            "PaymentTimeoutMinutes": 15,
+            "ExpirationIntervalInSeconds": 15,
+            "ExpirationBatchSize": 50
+        },
+        "Stripe": {
+            "Enabled": false,
+            "SecretKey": "",
+            "DefaultPaymentMethod": "pm_card_visa"
         }
     }
 }

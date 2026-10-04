@@ -8,13 +8,20 @@ public sealed class OrderCreatedIntegrationEvent(
     Guid orderId,
     Guid customerId,
     decimal totalPrice,
+    decimal discountAmount,
     DateTime createdAtUtc,
     List<OrderItemModel> orderItems)
     : IntegrationEvent(id, occuredOnUtc)
 {
     public Guid OrderId { get; init; } = orderId;
+
     public Guid CustomerId { get; init; } = customerId;
+
     public decimal TotalPrice { get; init; } = totalPrice;
+
+    public decimal DiscountAmount { get; init; } = discountAmount;
+
     public DateTime CreatedAtUtc { get; init; } = createdAtUtc;
+
     public List<OrderItemModel> OrderItems { get; init; } = orderItems;
 }

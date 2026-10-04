@@ -28,6 +28,7 @@ internal sealed class OrderCreatedDomainEventHandler(ISender sender, IEventBus e
                 result.Value.Id,
                 result.Value.CustomerId,
                 result.Value.TotalPrice,
+                result.Value.DiscountAmount,
                 result.Value.CreatedAtUtc,
                 result.Value.OrderItems.Select(oi => new OrderItemModel
                 {

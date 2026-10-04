@@ -1,4 +1,4 @@
-﻿using Evently.Common.Domain;
+using Evently.Common.Domain;
 using Evently.Modules.Ticketing.Domain.Events;
 using Evently.Modules.Ticketing.Domain.UnitTests.Abstractions;
 using FluentAssertions;
@@ -91,5 +91,73 @@ public class TicketTypeTests : BaseTest
         TicketTypeSoldOutDomainEvent domainEvent = AssertDomainEventWasPublished<TicketTypeSoldOutDomainEvent>(ticketType.Value);
 
         domainEvent.TicketTypeId.Should().Be(ticketType.Value.Id);
+    }
+
+    [Fact]
+    public void Restock_ShouldIncreaseAvailableQuantity_AndRaiseDomainEvent()
+    {
+        // Arrange
+        var ticketType = TicketType.Create(
+            Guid.CreateVersion7(),
+            Guid.CreateVersion7(),
+            Faker.Music.Genre(),
+            100m,
+            "USD",
+            10m);
+
+        ticketType.UpdateQuantity(10m);
+
+        // Act
+        Result result = ticketType.Restock(4m);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        ticketType.AvailableQuantity.Should().Be(4m);
+
+        TicketTypeRestockedDomainEvent domainEvent =
+            AssertDomainEventWasPublished<TicketTypeRestockedDomainEvent>(ticketType);
+
+        domainEvent.TicketTypeId.Should().Be(ticketType.Id);
+        domainEvent.Quantity.Should().Be(4m);
+    }
+
+    [Fact]
+    public void Restock_ShouldReturnFailure_WhenQuantityIsNotPositive()
+    {
+        // Arrange
+        var ticketType = TicketType.Create(
+            Guid.CreateVersion7(),
+            Guid.CreateVersion7(),
+            Faker.Music.Genre(),
+            100m,
+            "USD",
+            10m);
+
+        // Act
+        Result result = ticketType.Restock(decimal.Zero);
+
+        // Assert
+        result.Error.Should().Be(TicketTypeErrors.InvalidQuantity);
+    }
+
+    [Fact]
+    public void Restock_ShouldReturnFailure_WhenQuantityExceedsTotalCapacity()
+    {
+        // Arrange
+        var ticketType = TicketType.Create(
+            Guid.CreateVersion7(),
+            Guid.CreateVersion7(),
+            Faker.Music.Genre(),
+            100m,
+            "USD",
+            10m);
+
+        ticketType.UpdateQuantity(5m);
+
+        // Act
+        Result result = ticketType.Restock(6m);
+
+        // Assert
+        result.Error.Should().Be(TicketTypeErrors.InvalidRestockQuantity(5m));
     }
 }

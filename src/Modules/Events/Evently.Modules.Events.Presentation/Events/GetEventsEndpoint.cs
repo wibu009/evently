@@ -13,18 +13,17 @@ internal sealed class GetEventsEndpoint : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("events", async (ISender sender) =>
+        app.MapGet("events", async (ISender sender, int page = 1, int pageSize = 10) =>
             {
-                Result<IReadOnlyCollection<EventResponse>> result = await sender.Send(new GetEventsQuery());
+                Result<GetEventsResponse> result = await sender.Send(new GetEventsQuery(page, pageSize));
                 return result.Match(Results.Ok, ApiResults.Problem);
             })
-            .RequireAuthorization(Permissions.GetEvents)
+            .AllowAnonymous()
             .WithTags(Tags.Events)
             .WithName("Get Events")
-            .Produces<IReadOnlyCollection<EventResponse>>(StatusCodes.Status200OK)
+            .Produces<GetEventsResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
-            .WithSummary("Retrieves all events")
-            .WithDescription("Fetches a list of all events with their IDs, titles, categories, and other details.");
+            .WithSummary("Retrieves a paged list of events")
+            .WithDescription("Fetches the events ordered by their start date. Returns a paged result with the total count.");
     }
-} 
-
+}

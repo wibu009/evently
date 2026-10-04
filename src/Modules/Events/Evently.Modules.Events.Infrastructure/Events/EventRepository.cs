@@ -11,6 +11,13 @@ internal sealed class EventRepository(EventsDbContext context) : IEventRepositor
         return await context.Events.SingleOrDefaultAsync(e => e.Id == id, cancellationToken);
     }
 
+    public async Task<Event?> GetWithImagesAsync(Guid id, CancellationToken cancellationToken)
+    {
+        return await context.Events
+            .Include(e => e.Images)
+            .SingleOrDefaultAsync(e => e.Id == id, cancellationToken);
+    }
+
     public void Insert(Event @event)
     {
         context.Events.Add(@event);

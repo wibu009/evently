@@ -1,11 +1,14 @@
 using Evently.Gateway.Authentication;
 using Evently.Gateway.Middleware;
 using Evently.Gateway.OpenTelemetry;
+using Evently.ServiceDefaults;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+builder.AddServiceDefaults();
 
 // Logging Setup
 builder.Host.UseSerilog((context, loggerConfig) => loggerConfig.ReadFrom.Configuration(context.Configuration));
@@ -42,5 +45,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapReverseProxy();
+
+app.MapDefaultEndpoints();
 
 await app.RunAsync();
