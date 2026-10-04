@@ -28,13 +28,19 @@ jobs:
         run: dotnet restore ${{ env.SOLUTION_PATH }}
 
       - name: Build
-        run: dotnet build ${{ env.SOLUTION_PATH }} 
+        run: dotnet build ${{ env.SOLUTION_PATH }}
           --configuration Release
           --no-restore
 
+      # Each integration-test project starts its own Testcontainers set. Running the
+      # projects in parallel (MSBuild default) launches ~40 containers at once on a
+      # 4-core runner, starving the Docker daemon until container wait strategies
+      # time out. -m:1 serializes the per-project VSTest tasks; total time is still
+      # only a few minutes.
       - name: Test
         run: dotnet test ${{ env.SOLUTION_PATH }}
           --configuration Release
           --no-restore
           --no-build
           --verbosity normal
+          -m:1
