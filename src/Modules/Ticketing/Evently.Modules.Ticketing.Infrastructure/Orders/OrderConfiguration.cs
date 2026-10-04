@@ -12,5 +12,11 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.HasKey(o => o.Id);
 
         builder.HasOne<Customer>().WithMany().HasForeignKey(o => o.CustomerId);
+
+        builder.Property(o => o.Currency).HasMaxLength(3);
+
+        builder.Property(o => o.CancellationReason).HasMaxLength(500);
+
+        builder.HasIndex(o => new { o.Status, o.PaymentDueUtc });
     }
 }

@@ -23,7 +23,9 @@ internal sealed class GetTicketTypesQueryHandler(IDbConnectionFactory dbConnecti
                  name AS {nameof(TicketTypeResponse.Name)},
                  price AS {nameof(TicketTypeResponse.Price)},
                  currency AS {nameof(TicketTypeResponse.Currency)},
-                 quantity AS {nameof(TicketTypeResponse.Quantity)}
+                 quantity AS {nameof(TicketTypeResponse.Quantity)},
+                 color AS {nameof(TicketTypeResponse.Color)},
+                 background_image_url AS {nameof(TicketTypeResponse.BackgroundImageUrl)}
              FROM events.ticket_types
              WHERE event_id = @EventId
              """;

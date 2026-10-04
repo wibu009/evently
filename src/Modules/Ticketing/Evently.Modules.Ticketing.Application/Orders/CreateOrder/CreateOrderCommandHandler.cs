@@ -1,43 +1,70 @@
 ﻿using System.Data.Common;
+using Evently.Common.Application.Clock;
 using Evently.Common.Application.Messaging;
 using Evently.Common.Domain;
 using Evently.Modules.Ticketing.Application.Abstractions.Data;
-using Evently.Modules.Ticketing.Application.Abstractions.Payments;
 using Evently.Modules.Ticketing.Application.Carts;
 using Evently.Modules.Ticketing.Domain.Customers;
 using Evently.Modules.Ticketing.Domain.Events;
 using Evently.Modules.Ticketing.Domain.Orders;
 using Evently.Modules.Ticketing.Domain.Payments;
+using Evently.Modules.Ticketing.Domain.PromoCodes;
+using Microsoft.Extensions.Options;
 
 namespace Evently.Modules.Ticketing.Application.Orders.CreateOrder;
 
+/// <summary>
+/// The first step of the order fulfillment saga:
+/// <list type="bullet">
+/// <item>Reserves the ticket inventory transactionally (pessimistic row locks prevent overselling).</item>
+/// <item>Applies an optional promo code and creates the order in the <see cref="OrderStatus.Pending"/> state with a payment deadline.</item>
+/// <item>Creates the payment in the <see cref="PaymentStatus.Pending"/> state for the net amount.</item>
+/// </list>
+/// The charge itself is processed asynchronously through the outbox
+/// (<see cref="ProcessPayment.ProcessPaymentCommandHandler"/>); if it fails or the payment
+/// deadline passes, the reserved inventory is released as compensation.
+/// </summary>
 internal sealed class CreateOrderCommandHandler(
     ICustomerRepository customerRepository,
     IOrderRepository orderRepository,
     ITicketTypeRepository ticketTypeRepository,
     IPaymentRepository paymentRepository,
-    IPaymentService paymentService,
+    IPromoCodeRepository promoCodeRepository,
     CartService cartService,
+    IDateTimeProvider dateTimeProvider,
+    IOptions<OrdersOptions> ordersOptions,
     IUnitOfWork unitOfWork)
-    : ICommandHandler<CreateOrderCommand>
+    : ICommandHandler<CreateOrderCommand, Guid>
 {
-    public async Task<Result> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
     {
         await using DbTransaction transaction = await unitOfWork.BeginTransactionAsync(cancellationToken);
-        
+
         Customer? customer = await customerRepository.GetAsync(request.CustomerId, cancellationToken);
         if (customer is null)
         {
-            return Result.Failure(CustomerErrors.NotFound(request.CustomerId));
+            return Result.Failure<Guid>(CustomerErrors.NotFound(request.CustomerId));
         }
-        
-        var order = Order.Create(customer);
-        
+
         Cart cart = await cartService.GetAsync(request.CustomerId, cancellationToken);
         if (cart.Items.Count == 0)
         {
-            return Result.Failure(CartErrors.Empty);
+            return Result.Failure<Guid>(CartErrors.Empty);
         }
+
+        PromoCode? promoCode = null;
+        if (!string.IsNullOrWhiteSpace(request.PromoCode))
+        {
+            promoCode = await promoCodeRepository.GetByCodeAsync(request.PromoCode.Trim(), cancellationToken);
+            if (promoCode is null)
+            {
+                return Result.Failure<Guid>(PromoCodeErrors.NotFoundByCode(request.PromoCode.Trim()));
+            }
+        }
+
+        DateTime paymentDueUtc = dateTimeProvider.UtcNow.AddMinutes(ordersOptions.Value.PaymentTimeoutMinutes);
+
+        var order = Order.Create(customer, paymentDueUtc);
 
         foreach (CartItem cartItem in cart.Items)
         {
@@ -45,33 +72,50 @@ internal sealed class CreateOrderCommandHandler(
             TicketType? ticketType = await ticketTypeRepository.GetWithLockAsync(cartItem.TicketTypeId, cancellationToken);
             if (ticketType is null)
             {
-                return Result.Failure(TicketTypeErrors.NotFound(cartItem.TicketTypeId));
+                return Result.Failure<Guid>(TicketTypeErrors.NotFound(cartItem.TicketTypeId));
             }
 
             Result result = ticketType.UpdateQuantity(cartItem.Quantity);
             if (result.IsFailure)
             {
-                return Result.Failure(result.Error);
+                return Result.Failure<Guid>(result.Error);
             }
-            
+
             order.AddItem(ticketType, cartItem.Quantity, ticketType.Price, ticketType.Currency);
         }
-        
+
+        if (promoCode is not null)
+        {
+            if (promoCode.Currency != order.Currency)
+            {
+                return Result.Failure<Guid>(PromoCodeErrors.CurrencyMismatch(promoCode.Currency, order.Currency));
+            }
+
+            Result<decimal> discountResult = promoCode.CalculateDiscount(order.TotalPrice, dateTimeProvider.UtcNow);
+            if (discountResult.IsFailure)
+            {
+                return Result.Failure<Guid>(discountResult.Error);
+            }
+
+            Result applyResult = order.ApplyPromoCode(promoCode.Id, discountResult.Value);
+            if (applyResult.IsFailure)
+            {
+                return Result.Failure<Guid>(applyResult.Error);
+            }
+        }
+
         orderRepository.Insert(order);
-        
-        //We're faking a payment gateway request here
-        PaymentResponse paymentResponse = await paymentService.ChargeAsync(order.TotalPrice, order.Currency);
-        
-        var payment = Payment.Create(order, paymentResponse.TransactionId, paymentResponse.Amount, paymentResponse.Currency);
-        
+
+        var payment = Payment.Create(order, order.NetPrice, order.Currency);
+
         paymentRepository.Insert(payment);
-        
+
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        
+
         await transaction.CommitAsync(cancellationToken);
-        
+
         await cartService.ClearAsync(request.CustomerId, cancellationToken);
-        
-        return Result.Success();
+
+        return order.Id;
     }
 }

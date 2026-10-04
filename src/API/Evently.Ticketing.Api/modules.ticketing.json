@@ -7,6 +7,16 @@
     "Inbox": {
       "IntervalInSeconds": 5,
       "BatchSize": 50
+    },
+    "Orders": {
+      "PaymentTimeoutMinutes": 15,
+      "ExpirationIntervalInSeconds": 60,
+      "ExpirationBatchSize": 100
+    },
+    "Stripe": {
+      "Enabled": false,
+      "SecretKey": "",
+      "DefaultPaymentMethod": ""
     }
   }
 }

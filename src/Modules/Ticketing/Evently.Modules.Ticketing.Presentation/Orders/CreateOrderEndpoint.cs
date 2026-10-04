@@ -16,17 +16,23 @@ internal sealed class CreateOrderEndpoint : IEndpoint
     {
         app.MapPost("orders", async (ICurrentActor actor, ISender sender) =>
             {
-                Result result = await sender.Send(new CreateOrderCommand(actor.Id));
+                Result<Guid> result = await sender.Send(new CreateOrderCommand(actor.Id));
 
-                return result.Match(Results.NoContent, ApiResults.Problem);
+                return result.Match(
+                    orderId => Results.CreatedAtRoute(
+                        "Get Order",
+                        new { id = orderId },
+                        new { id = orderId }),
+                    ApiResults.Problem);
             })
             .RequireAuthorization(Permissions.CreateOrder)
             .WithTags(Tags.Orders)
             .WithName("Create Order")
-            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status409Conflict)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
-            .WithSummary("Creates a new order for the user")
-            .WithDescription("Allows the current user to create a new order. Returns success when the order is created successfully or an error if the operation fails.");
+            .WithSummary("Checks out the cart and creates a new pending order for the user")
+            .WithDescription("Reserves the ticket inventory of the cart and creates a pending order with a payment deadline. Returns the id of the created order.");
     }
 }

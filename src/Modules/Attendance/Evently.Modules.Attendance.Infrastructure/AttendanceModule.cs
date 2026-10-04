@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using Evently.Common.Application;
 using Evently.Common.Application.EventBus;
 using Evently.Common.Application.Messaging;
@@ -49,7 +49,7 @@ public static class AttendanceModule
         services.AddDbContext<AttendanceDbContext>((sp, options) =>
             options
                 .UseNpgsql(
-                    configuration.GetConnectionStringOrThrow("WriteDatabase"),
+                    configuration.GetConnectionStringOrThrow("writedb"),
                     npgsqlOptions => npgsqlOptions
                         .MigrationsHistoryTable(HistoryRepository.DefaultTableName, Schemas.Attendance))
                 .UseSnakeCaseNamingConvention()

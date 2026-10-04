@@ -48,18 +48,47 @@ public sealed class TicketType : Entity
 
     public Result UpdateQuantity(decimal quantity)
     {
+        if (quantity <= decimal.Zero)
+        {
+            return Result.Failure(TicketTypeErrors.InvalidQuantity);
+        }
+
         if (AvailableQuantity < quantity)
         {
             return Result.Failure(TicketTypeErrors.NotEnoughQuantity(AvailableQuantity));
         }
-        
+
         AvailableQuantity -= quantity;
 
         if (AvailableQuantity == decimal.Zero)
         {
             RaiseDomainEvent(new TicketTypeSoldOutDomainEvent(Id));
         }
-        
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Returns previously reserved or refunded tickets back into the sellable inventory.
+    /// Used as the compensation step of the order fulfillment saga when orders
+    /// are canceled or expire without a successful payment.
+    /// </summary>
+    public Result Restock(decimal quantity)
+    {
+        if (quantity <= decimal.Zero)
+        {
+            return Result.Failure(TicketTypeErrors.InvalidQuantity);
+        }
+
+        if (AvailableQuantity + quantity > Quantity)
+        {
+            return Result.Failure(TicketTypeErrors.InvalidRestockQuantity(Quantity - AvailableQuantity));
+        }
+
+        AvailableQuantity += quantity;
+
+        RaiseDomainEvent(new TicketTypeRestockedDomainEvent(Id, quantity));
+
         return Result.Success();
     }
 }

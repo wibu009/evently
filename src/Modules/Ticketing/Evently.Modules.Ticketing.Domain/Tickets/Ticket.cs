@@ -1,4 +1,5 @@
 ﻿using Evently.Common.Domain;
+using Evently.Modules.Ticketing.Domain.Customers;
 using Evently.Modules.Ticketing.Domain.Events;
 using Evently.Modules.Ticketing.Domain.Orders;
 
@@ -41,8 +42,36 @@ public sealed class Ticket : Entity
         {
             return;
         }
-        
+
         Archived = true;
         RaiseDomainEvent(new TicketArchivedDomainEvent(Id, Code));
+    }
+
+    /// <summary>
+    /// Transfers the ticket to another customer. The previous owner loses access
+    /// and the new owner can use the ticket for check-in.
+    /// </summary>
+    public Result Transfer(Customer fromCustomer, Customer toCustomer)
+    {
+        if (Archived)
+        {
+            return Result.Failure(TicketErrors.CannotTransferArchivedTicket);
+        }
+
+        if (CustomerId != fromCustomer.Id)
+        {
+            return Result.Failure(TicketErrors.NotOwnedByCustomer(fromCustomer.Id));
+        }
+
+        if (toCustomer.Id == fromCustomer.Id)
+        {
+            return Result.Failure(TicketErrors.CannotTransferToSelf);
+        }
+
+        CustomerId = toCustomer.Id;
+
+        RaiseDomainEvent(new TicketTransferredDomainEvent(Id, Code, fromCustomer.Id, toCustomer.Id));
+
+        return Result.Success();
     }
 }

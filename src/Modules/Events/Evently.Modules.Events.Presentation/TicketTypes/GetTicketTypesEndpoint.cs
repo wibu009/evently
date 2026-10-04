@@ -19,7 +19,7 @@ internal sealed class GetTicketTypesEndpoint : IEndpoint
                 Result<IReadOnlyCollection<TicketTypeResponse>> result = await sender.Send(new GetTicketTypesQuery(eventId));
                 return result.Match(Results.Ok, ApiResults.Problem);
             })
-            .RequireAuthorization(Permissions.GetTicketTypes)
+            .AllowAnonymous()
             .WithTags(Tags.TicketTypes)
             .WithName("Get Ticket Types")
             .Produces<IReadOnlyCollection<TicketTypeResponse>>(StatusCodes.Status200OK)

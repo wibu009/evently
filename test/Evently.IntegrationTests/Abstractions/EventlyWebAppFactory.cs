@@ -28,6 +28,12 @@ public sealed class EventlyWebAppFactory(TestEnvironment env) : WebApplicationFa
                 cfg.Sources.Remove(envSource);
             }
             cfg.AddEnvironmentVariables();
+
+            // Keep the development sample data seeder out of the test databases.
+            cfg.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["SampleData:Enabled"] = "false"
+            });
         });
     }
 }

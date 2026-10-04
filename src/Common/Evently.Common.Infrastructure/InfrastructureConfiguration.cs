@@ -1,4 +1,4 @@
-﻿using Dapper;
+using Dapper;
 using Evently.Common.Application.Authentication;
 using Evently.Common.Application.Caching;
 using Evently.Common.Application.Clock;
@@ -46,7 +46,7 @@ public static class InfrastructureConfiguration
 
         #region Data
 
-        string writeDatabaseConnectionString = configuration.GetConnectionStringOrThrow("WriteDatabase");
+        string writeDatabaseConnectionString = configuration.GetConnectionStringOrThrow("writedb");
         
         NpgsqlDataSource npgsqlDataSource = new NpgsqlDataSourceBuilder(writeDatabaseConnectionString).Build();
         services.TryAddSingleton(npgsqlDataSource);
@@ -55,7 +55,7 @@ public static class InfrastructureConfiguration
         
         SqlMapper.AddTypeHandler(new GenericArrayHandler<string>());
         
-        string readDatabaseConnectionString = configuration.GetConnectionStringOrThrow("ReadDatabase");
+        string readDatabaseConnectionString = configuration.GetConnectionStringOrThrow("readdatabase");
 
         var mongoClientSettings = MongoClientSettings.FromConnectionString(readDatabaseConnectionString);
 
@@ -76,7 +76,7 @@ public static class InfrastructureConfiguration
 
         #region Caching
 
-        string redisConnectionString = configuration.GetConnectionStringOrThrow("Cache");
+        string redisConnectionString = configuration.GetConnectionStringOrThrow("cache");
 
         try
         {
@@ -103,7 +103,7 @@ public static class InfrastructureConfiguration
         
         #region EventBus
         
-        var rabbitMqSettings = new RabbitMqSettings(configuration.GetConnectionStringOrThrow("Queue"));
+        var rabbitMqSettings = new RabbitMqSettings(configuration.GetConnectionStringOrThrow("queue"));
 
         services.AddMassTransit(configure =>
         {

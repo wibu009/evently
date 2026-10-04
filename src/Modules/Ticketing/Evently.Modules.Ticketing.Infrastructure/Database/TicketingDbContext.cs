@@ -7,12 +7,16 @@ using Evently.Modules.Ticketing.Domain.Customers;
 using Evently.Modules.Ticketing.Domain.Events;
 using Evently.Modules.Ticketing.Domain.Orders;
 using Evently.Modules.Ticketing.Domain.Payments;
+using Evently.Modules.Ticketing.Domain.PromoCodes;
 using Evently.Modules.Ticketing.Domain.Tickets;
+using Evently.Modules.Ticketing.Domain.WaitingList;
 using Evently.Modules.Ticketing.Infrastructure.Customers;
 using Evently.Modules.Ticketing.Infrastructure.Events;
 using Evently.Modules.Ticketing.Infrastructure.Orders;
 using Evently.Modules.Ticketing.Infrastructure.Payments;
+using Evently.Modules.Ticketing.Infrastructure.PromoCodes;
 using Evently.Modules.Ticketing.Infrastructure.Tickets;
+using Evently.Modules.Ticketing.Infrastructure.WaitingList;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -27,6 +31,8 @@ public sealed class TicketingDbContext(DbContextOptions<TicketingDbContext> opti
     internal DbSet<OrderItem> OrderItems { get; set; }
     internal DbSet<Ticket> Tickets { get; set; }
     internal DbSet<Payment> Payments { get; set; }
+    internal DbSet<PromoCode> PromoCodes { get; set; }
+    internal DbSet<WaitingListEntry> WaitingListEntries { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -43,6 +49,8 @@ public sealed class TicketingDbContext(DbContextOptions<TicketingDbContext> opti
         modelBuilder.ApplyConfiguration(new OrderItemConfiguration());
         modelBuilder.ApplyConfiguration(new TicketConfiguration());
         modelBuilder.ApplyConfiguration(new PaymentConfiguration());
+        modelBuilder.ApplyConfiguration(new PromoCodeConfiguration());
+        modelBuilder.ApplyConfiguration(new WaitingListEntryConfiguration());
     }
 
     public async Task<DbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
@@ -52,6 +60,8 @@ public sealed class TicketingDbContext(DbContextOptions<TicketingDbContext> opti
             await Database.CurrentTransaction.DisposeAsync();
         }
 
-        return (await Database.BeginTransactionAsync(cancellationToken)).GetDbTransaction();
+        IDbContextTransaction transaction = await Database.BeginTransactionAsync(cancellationToken);
+
+        return new UnitOfWorkTransaction(transaction);
     }
 }

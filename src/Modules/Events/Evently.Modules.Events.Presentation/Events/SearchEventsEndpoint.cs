@@ -14,7 +14,8 @@ internal sealed class SearchEventsEndpoint : IEndpoint
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("events/search", async (
-                ISender sender, 
+                ISender sender,
+                string? search,
                 Guid? categoryId,
                 DateTime? startDate,
                 DateTime? endDate,
@@ -22,16 +23,16 @@ internal sealed class SearchEventsEndpoint : IEndpoint
                 int pageSize = 10) =>
             {
                 Result<SearchEventsResponse> result = await sender.Send(
-                    new SearchEventsQuery(categoryId, startDate, endDate, page, pageSize));
+                    new SearchEventsQuery(search, categoryId, startDate, endDate, page, pageSize));
                 return result.Match(Results.Ok, ApiResults.Problem);
             })
-            .RequireAuthorization(Permissions.GetEvents)
+            .AllowAnonymous()
             .WithTags(Tags.Events)
             .WithName("Search Events")
             .Produces<SearchEventsResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
-            .WithSummary("Searches for events")
-            .WithDescription("Searches for events based on optional category ID, date range, and pagination parameters. Returns a paginated list of matching events.");
+            .WithSummary("Searches for published events")
+            .WithDescription("Searches the public catalog of published events by a free-text term (title, description, or location), an optional category ID, and a date range. Returns a paginated list of matching events.");
     }
 }

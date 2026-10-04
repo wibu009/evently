@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using Evently.Common.Application;
 using Evently.Common.Application.Authorization;
 using Evently.Common.Application.EventBus;
@@ -40,7 +40,7 @@ public static class UsersModule
     {
         #region Database
 
-        string writeDatabaseConnectionString = configuration.GetConnectionStringOrThrow("WriteDatabase");
+        string writeDatabaseConnectionString = configuration.GetConnectionStringOrThrow("writedb");
 
         services.AddDbContext<UsersDbContext>((sp, options)
             => options

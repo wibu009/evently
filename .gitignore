@@ -402,3 +402,6 @@ FodyWeavers.xsd
 
 .container/
 .containers/
+
+# Browser automation session artifacts
+.playwright-mcp/

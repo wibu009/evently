@@ -13,6 +13,7 @@ namespace Evently.Modules.Events.Infrastructure.Database;
 public sealed class EventsDbContext(DbContextOptions<EventsDbContext> options) : DbContext(options), IUnitOfWork
 {
     internal DbSet<Event> Events { get; set; }
+    internal DbSet<EventImage> EventImages { get; set; }
     internal DbSet<Category> Categories { get; set; }
     internal DbSet<TicketType> TicketTypes { get; set; }
 
@@ -25,6 +26,7 @@ public sealed class EventsDbContext(DbContextOptions<EventsDbContext> options) :
         modelBuilder.ApplyConfiguration(new InboxMessageConfiguration());
         modelBuilder.ApplyConfiguration(new InboxMessageConsumerConfiguration());
         modelBuilder.ApplyConfiguration(new EventConfiguration());
+        modelBuilder.ApplyConfiguration(new EventImageConfiguration());
         modelBuilder.ApplyConfiguration(new TicketTypeConfiguration());
     }
 }

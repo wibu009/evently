@@ -5,6 +5,7 @@ namespace Evently.Modules.Ticketing.Domain.Payments;
 public interface IPaymentRepository
 {
     Task<Payment?> GetAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<Payment?> GetForOrderAsync(Guid orderId, CancellationToken cancellationToken = default);
     Task<IEnumerable<Payment>> GetForEventAsync(Event @event, CancellationToken cancellationToken = default);
     void Insert(Payment payment);
 }

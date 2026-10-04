@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.EnvironmentVariables;
@@ -43,12 +43,21 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
                 configBuilder.Sources.Remove(environmentSource);
             }
             configBuilder.AddEnvironmentVariables();
+
+            // The saga state-machine tests drive each step explicitly (ProcessPayment, ExpireOrder, Restock...).
+            // The background outbox/inbox/expiration jobs are slowed down so they cannot race the assertions.
+            configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Ticketing:Outbox:IntervalInSeconds"] = "3600",
+                ["Ticketing:Inbox:IntervalInSeconds"] = "3600",
+                ["Ticketing:Orders:ExpirationIntervalInSeconds"] = "3600"
+            });
         });
         
-        Environment.SetEnvironmentVariable("ConnectionStrings:WriteDatabase", _postgreSqlContainer.GetConnectionString());
-        Environment.SetEnvironmentVariable("ConnectionStrings:ReadDatabase", _mongoDbContainer.GetConnectionString());
-        Environment.SetEnvironmentVariable("ConnectionStrings:Cache", _redisContainer.GetConnectionString());
-        Environment.SetEnvironmentVariable("ConnectionStrings:Queue", _rabbitMqContainer.GetConnectionString());
+        Environment.SetEnvironmentVariable("ConnectionStrings:writedb", _postgreSqlContainer.GetConnectionString());
+        Environment.SetEnvironmentVariable("ConnectionStrings:readdatabase", _mongoDbContainer.GetConnectionString());
+        Environment.SetEnvironmentVariable("ConnectionStrings:cache", _redisContainer.GetConnectionString());
+        Environment.SetEnvironmentVariable("ConnectionStrings:queue", _rabbitMqContainer.GetConnectionString());
     }
     
     public async Task InitializeAsync()

@@ -2,6 +2,7 @@ using Evently.Common.Infrastructure;
 using Evently.Common.Infrastructure.Configuration;
 using Evently.Common.Presentation.Endpoints;
 using Evently.Modules.Ticketing.Infrastructure;
+using Evently.ServiceDefaults;
 using Evently.Ticketing.Api.Extensions;
 using Evently.Ticketing.Api.Middleware;
 using Evently.Ticketing.Api.OpenTelemetry;
@@ -13,6 +14,8 @@ using Scalar.AspNetCore;
 using Serilog;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+builder.AddServiceDefaults();
 
 //Logging Setup
 builder.Host.UseSerilog((context, loggerConfig) => loggerConfig.ReadFrom.Configuration(context.Configuration));
@@ -27,17 +30,18 @@ builder.Services.AddInfrastructure(DiagnosticsConfig.ServiceName, builder.Config
 // Other Setup
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
+builder.Services.AddCors();
 
 builder.Services.AddOpenApiDocumentation();
 
 builder.Services
     .AddHealthChecks()
-    .AddNpgSql(builder.Configuration.GetConnectionStringOrThrow("WriteDatabase"))
-    .AddMongoDb(_ => new MongoClient(builder.Configuration.GetConnectionStringOrThrow("ReadDatabase")))
-    .AddRedis(builder.Configuration.GetConnectionStringOrThrow("Cache"))
+    .AddNpgSql(builder.Configuration.GetConnectionStringOrThrow("writedb"))
+    .AddMongoDb(_ => new MongoClient(builder.Configuration.GetConnectionStringOrThrow("readdatabase")))
+    .AddRedis(builder.Configuration.GetConnectionStringOrThrow("cache"))
     .AddRabbitMQ(_ => new ConnectionFactory
         {
-            Uri = new Uri(builder.Configuration.GetConnectionStringOrThrow("Queue"))
+            Uri = new Uri(builder.Configuration.GetConnectionStringOrThrow("queue"))
         }
         .CreateConnectionAsync().GetAwaiter().GetResult())
     .AddUrlGroup(new Uri(builder.Configuration.GetValueOrThrow<string>("KeyCloak:HealthUrl")), HttpMethod.Get, "keycloak");
@@ -46,6 +50,9 @@ WebApplication app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
+    app.UseCors(corsPolicyBuilder =>
+        corsPolicyBuilder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+
     app.MapOpenApi();
     app.MapScalarApiReference();
     
@@ -53,6 +60,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapEndpoints();
+
+app.MapDefaultEndpoints();
 
 app.MapHealthChecks("health", new HealthCheckOptions
 {

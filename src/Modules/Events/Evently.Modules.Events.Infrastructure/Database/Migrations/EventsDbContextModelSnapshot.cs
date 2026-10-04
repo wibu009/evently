@@ -158,6 +158,11 @@ namespace Evently.Modules.Events.Infrastructure.Database.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("AccentColor")
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)")
+                        .HasColumnName("accent_color");
+
                     b.Property<Guid>("CategoryId")
                         .HasColumnType("uuid")
                         .HasColumnName("category_id");
@@ -170,6 +175,11 @@ namespace Evently.Modules.Events.Infrastructure.Database.Migrations
                     b.Property<DateTime?>("EndAtUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("end_at_utc");
+
+                    b.Property<string>("HeroBannerUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("hero_banner_url");
 
                     b.Property<string>("Location")
                         .IsRequired()
@@ -198,12 +208,60 @@ namespace Evently.Modules.Events.Infrastructure.Database.Migrations
                     b.ToTable("events", "events");
                 });
 
+            modelBuilder.Entity("Evently.Modules.Events.Domain.Events.EventImage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("display_order");
+
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("event_id");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("image_url");
+
+                    b.Property<bool>("IsCover")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_cover");
+
+                    b.HasKey("Id")
+                        .HasName("pk_event_images");
+
+                    b.HasIndex("EventId")
+                        .HasDatabaseName("ix_event_images_event_id");
+
+                    b.ToTable("event_images", "events");
+                });
+
             modelBuilder.Entity("Evently.Modules.Events.Domain.TicketTypes.TicketType", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
+
+                    b.Property<string>("BackgroundImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("background_image_url");
+
+                    b.Property<string>("Color")
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)")
+                        .HasColumnName("color");
 
                     b.Property<string>("Currency")
                         .IsRequired()
@@ -246,6 +304,16 @@ namespace Evently.Modules.Events.Infrastructure.Database.Migrations
                         .HasConstraintName("fk_events_categories_category_id");
                 });
 
+            modelBuilder.Entity("Evently.Modules.Events.Domain.Events.EventImage", b =>
+                {
+                    b.HasOne("Evently.Modules.Events.Domain.Events.Event", null)
+                        .WithMany("Images")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_event_images_events_event_id");
+                });
+
             modelBuilder.Entity("Evently.Modules.Events.Domain.TicketTypes.TicketType", b =>
                 {
                     b.HasOne("Evently.Modules.Events.Domain.Events.Event", null)
@@ -254,6 +322,11 @@ namespace Evently.Modules.Events.Infrastructure.Database.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_ticket_types_events_event_id");
+                });
+
+            modelBuilder.Entity("Evently.Modules.Events.Domain.Events.Event", b =>
+                {
+                    b.Navigation("Images");
                 });
 #pragma warning restore 612, 618
         }

@@ -12,6 +12,15 @@ internal sealed class PaymentRepository(TicketingDbContext context) : IPaymentRe
         return await context.Payments.SingleOrDefaultAsync(p => p.Id == id, cancellationToken);
     }
 
+    public async Task<Payment?> GetForOrderAsync(Guid orderId, CancellationToken cancellationToken = default)
+    {
+        return await context
+            .Payments
+            .Where(p => p.OrderId == orderId)
+            .OrderBy(p => p.CreatedAtUtc)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public async Task<IEnumerable<Payment>> GetForEventAsync(
         Event @event,
         CancellationToken cancellationToken = default)

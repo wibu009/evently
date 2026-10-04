@@ -14,18 +14,18 @@ internal sealed class GetOrdersEndpoint : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("orders", async (ICurrentActor actor, ISender sender) =>
+        app.MapGet("orders", async (ICurrentActor actor, ISender sender, int page = 1, int pageSize = 10) =>
             {
-                Result<IReadOnlyList<OrderResponse>> result = await sender.Send(new GetOrdersQuery(actor.Id));
+                Result<GetOrdersResponse> result = await sender.Send(new GetOrdersQuery(actor.Id, page, pageSize));
 
                 return result.Match(Results.Ok, ApiResults.Problem);
             })
             .RequireAuthorization(Permissions.GetOrders)
             .WithTags(Tags.Orders)
             .WithName("Get Orders")
-            .Produces<IReadOnlyList<OrderResponse>>(StatusCodes.Status200OK)
+            .Produces<GetOrdersResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
-            .WithSummary("Retrieves a list of orders for the current user")
-            .WithDescription("Fetches all orders associated with the current user. Returns the list of orders or an error if something goes wrong.");
+            .WithSummary("Retrieves a paged list of orders for the current user")
+            .WithDescription("Fetches the orders associated with the current user, most recent first. Returns a paged result or an error if something goes wrong.");
     }
 }

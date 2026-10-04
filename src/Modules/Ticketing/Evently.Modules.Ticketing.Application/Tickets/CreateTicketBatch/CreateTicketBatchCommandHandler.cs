@@ -22,6 +22,11 @@ internal sealed class CreateTicketBatchCommandHandler(
             return Result.Failure(OrderErrors.NotFound(request.OrderId));
         }
 
+        if (order.Status != OrderStatus.Paid)
+        {
+            return Result.Failure(OrderErrors.NotPaid);
+        }
+
         Result result = order.IssueTickets();
         if (result.IsFailure)
         {

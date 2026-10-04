@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.EnvironmentVariables;
@@ -45,10 +45,10 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
             configBuilder.AddEnvironmentVariables();
         });
         
-        Environment.SetEnvironmentVariable("ConnectionStrings:WriteDatabase", _postgreSqlContainer.GetConnectionString());
-        Environment.SetEnvironmentVariable("ConnectionStrings:ReadDatabase", _mongoDbContainer.GetConnectionString());
-        Environment.SetEnvironmentVariable("ConnectionStrings:Cache", _redisContainer.GetConnectionString());
-        Environment.SetEnvironmentVariable("ConnectionStrings:Queue", _rabbitMqContainer.GetConnectionString());
+        Environment.SetEnvironmentVariable("ConnectionStrings:writedb", _postgreSqlContainer.GetConnectionString());
+        Environment.SetEnvironmentVariable("ConnectionStrings:readdatabase", _mongoDbContainer.GetConnectionString());
+        Environment.SetEnvironmentVariable("ConnectionStrings:cache", _redisContainer.GetConnectionString());
+        Environment.SetEnvironmentVariable("ConnectionStrings:queue", _rabbitMqContainer.GetConnectionString());
     }
     
     public async Task InitializeAsync()

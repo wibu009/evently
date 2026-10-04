@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using Evently.Common.Application;
 using Evently.Common.Application.EventBus;
 using Evently.Common.Application.Messaging;
@@ -41,7 +41,7 @@ public static class EventsModule
     {
         #region Database
 
-        string writeDatabaseConnectionString = configuration.GetConnectionStringOrThrow("WriteDatabase");
+        string writeDatabaseConnectionString = configuration.GetConnectionStringOrThrow("writedb");
 
         services.AddDbContext<EventsDbContext>((sp, options) => options
             .UseNpgsql(
@@ -58,6 +58,7 @@ public static class EventsModule
         #region Events
 
         services.AddScoped<IEventRepository, EventRepository>();
+        services.AddScoped<IEventImageRepository, EventImageRepository>();
 
         #endregion
 
@@ -120,7 +121,7 @@ public static class EventsModule
 
         services.AddEndpointsFromAssembly(presentationAssembly);
 
-        string redisConnectionString = configuration.GetConnectionStringOrThrow("Cache");
+        string redisConnectionString = configuration.GetConnectionStringOrThrow("cache");
 
         services.AddMassTransit(cfg =>
         {

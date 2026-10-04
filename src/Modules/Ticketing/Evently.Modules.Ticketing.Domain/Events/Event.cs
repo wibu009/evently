@@ -39,8 +39,15 @@ public sealed class Event : Entity
     {
         StartAtUtc = startAtUtc;
         EndAtUtc = endAtUtc;
-        
+
         RaiseDomainEvent(new EventRescheduledDomainEvent(Id, startAtUtc, endAtUtc));
+    }
+
+    public void UpdateDetails(string title, string description, string location)
+    {
+        Title = title;
+        Description = description;
+        Location = location;
     }
 
     public void Cancel()

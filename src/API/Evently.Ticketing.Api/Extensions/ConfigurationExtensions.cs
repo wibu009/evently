@@ -9,5 +9,10 @@ internal static class ConfigurationExtensions
             configurationBuilder.AddJsonFile($"modules.{module}.json", false, true);
             configurationBuilder.AddJsonFile($"modules.{module}.Development.json", false, true);
         }
+
+        // These JSON files are appended after the default sources, so they would win over
+        // environment variables. Re-add the environment source so host-injected settings
+        // (.NET Aspire endpoint references) override the docker-compose defaults here.
+        configurationBuilder.AddEnvironmentVariables();
     }
 }

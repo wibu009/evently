@@ -20,8 +20,16 @@ internal sealed class GetOrderQueryHandler(
              SELECT
                  o.id AS {nameof(OrderResponse.Id)},
                  o.customer_id AS {nameof(OrderResponse.CustomerId)},
-                 o.status AS {nameof(OrderResponse.Status)},
+                 CASE o.status
+                     WHEN 0 THEN 'Pending'
+                     WHEN 1 THEN 'Paid'
+                     WHEN 2 THEN 'Refunded'
+                     WHEN 3 THEN 'Canceled'
+                     WHEN 4 THEN 'Expired'
+                 END AS {nameof(OrderResponse.Status)},
                  o.total_price AS {nameof(OrderResponse.TotalPrice)},
+                 o.discount_amount AS {nameof(OrderResponse.DiscountAmount)},
+                 o.currency AS {nameof(OrderResponse.Currency)},
                  o.created_at_utc AS {nameof(OrderResponse.CreatedAtUtc)},
                  oi.id AS {nameof(OrderItemResponse.OrderItemId)},
                  oi.order_id AS {nameof(OrderItemResponse.OrderId)},

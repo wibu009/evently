@@ -12,5 +12,9 @@ internal sealed class TicketTypeConfiguration : IEntityTypeConfiguration<TicketT
         builder.HasOne<Event>()
             .WithMany()
             .HasForeignKey(t => t.EventId);
+
+        builder.Property(t => t.Color).HasMaxLength(7).IsRequired(false);
+
+        builder.Property(t => t.BackgroundImageUrl).HasMaxLength(500).IsRequired(false);
     }
 }

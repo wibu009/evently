@@ -19,6 +19,14 @@ internal sealed class TicketRepository(TicketingDbContext context) : ITicketRepo
         return await context.Tickets.Where(t => t.EventId == @event.Id).ToListAsync(cancellationToken);
     }
     
+    public async Task<IEnumerable<Ticket>> GetForOrderAsync(Guid orderId, CancellationToken cancellationToken = default)
+    {
+        return await context
+            .Tickets
+            .Where(t => t.OrderId == orderId)
+            .ToListAsync(cancellationToken);
+    }
+
     public void Insert(Ticket ticket)
     {
         context.Tickets.Add(ticket);

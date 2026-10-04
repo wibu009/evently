@@ -7,5 +7,9 @@ internal sealed class CreateOrderCommandValidator : AbstractValidator<CreateOrde
     public CreateOrderCommandValidator()
     {
         RuleFor(x => x.CustomerId).NotEmpty();
+
+        RuleFor(x => x.PromoCode)
+            .MaximumLength(50)
+            .When(x => !string.IsNullOrWhiteSpace(x.PromoCode));
     }
 }

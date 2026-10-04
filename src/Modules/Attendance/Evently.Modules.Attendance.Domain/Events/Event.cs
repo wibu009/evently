@@ -25,7 +25,7 @@ public sealed class Event : Entity
             StartAtUtc = startAtUtc,
             EndAtUtc = endAtUtc
         };
-        
+
         @event.RaiseDomainEvent(new EventCreatedDomainEvent(
             @event.Id,
             @event.Title,
@@ -33,7 +33,14 @@ public sealed class Event : Entity
             @event.Location,
             @event.StartAtUtc,
             @event.EndAtUtc));
-        
+
         return @event;
+    }
+
+    public void UpdateDetails(string title, string description, string location)
+    {
+        Title = title;
+        Description = description;
+        Location = location;
     }
 }

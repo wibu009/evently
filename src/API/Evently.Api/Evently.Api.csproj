@@ -32,6 +32,7 @@
       <ProjectReference Include="..\..\Modules\Attendance\Evently.Modules.Attendance.Infrastructure\Evently.Modules.Attendance.Infrastructure.csproj" />
       <ProjectReference Include="..\..\Modules\Events\Evently.Modules.Events.Infrastructure\Evently.Modules.Events.Infrastructure.csproj" />
       <ProjectReference Include="..\..\Modules\Users\Evently.Modules.Users.Infrastructure\Evently.Modules.Users.Infrastructure.csproj" />
+      <ProjectReference Include="..\..\Aspire\Evently.ServiceDefaults\Evently.ServiceDefaults.csproj" />
     </ItemGroup>
 
 </Project>
