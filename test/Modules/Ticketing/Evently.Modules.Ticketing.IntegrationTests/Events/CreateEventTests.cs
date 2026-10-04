@@ -19,8 +19,10 @@ public class CreateEventTests(IntegrationTestWebAppFactory factory) : BaseIntegr
             ticketTypeId,
             eventId,
             Faker.Music.Genre(),
-            Faker.Random.Decimal(),
-            Faker.Random.String(3),
+            Faker.Random.Decimal(1, 1_000),
+            // Bogus's Random.String can emit unpaired surrogates that Npgsql's strict
+            // UTF-8 rejects; use a real three-letter alphabetic currency code instead.
+            Faker.Random.AlphaNumeric(3).ToUpperInvariant(),
             quantity);
 
         var command = new CreateEventCommand(
