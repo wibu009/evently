@@ -43,6 +43,12 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
                 configBuilder.Sources.Remove(environmentSource);
             }
             configBuilder.AddEnvironmentVariables();
+
+            // Keep the development sample data seeder out of the test databases.
+            configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["SampleData:Enabled"] = "false"
+            });
         });
         
         Environment.SetEnvironmentVariable("ConnectionStrings:writedb", _postgreSqlContainer.GetConnectionString());
