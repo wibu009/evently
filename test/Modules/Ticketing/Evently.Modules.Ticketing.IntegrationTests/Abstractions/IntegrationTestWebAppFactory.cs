@@ -50,7 +50,8 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
             {
                 ["Ticketing:Outbox:IntervalInSeconds"] = "3600",
                 ["Ticketing:Inbox:IntervalInSeconds"] = "3600",
-                ["Ticketing:Orders:ExpirationIntervalInSeconds"] = "3600"
+                ["Ticketing:Orders:ExpirationIntervalInSeconds"] = "3600",
+                ["SampleData:Enabled"] = "false"
             });
         });
         
