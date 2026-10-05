@@ -1,1 +1,0 @@
-import{c as o,j as t,r as e,K as r}from"./evently-C3WtrOYl.js";import"./index-CKYewT40.js";if(!window.kcContext)throw new Error("No Keycloak context");document.body.classList.add("evently-keycloak");o.createRoot(document.getElementById("root")).render(t.jsx(e.StrictMode,{children:t.jsx(r,{kcContext:window.kcContext})}));

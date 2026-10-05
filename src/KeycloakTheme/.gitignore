@@ -1,0 +1,5 @@
+dist/
+dist_keycloak/
+node_modules/
+public/keycloak-theme/
+build_keycloak/
