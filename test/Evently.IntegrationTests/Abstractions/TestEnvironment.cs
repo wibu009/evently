@@ -33,7 +33,7 @@ public sealed class TestEnvironment : IAsyncLifetime
         .WithImage("redis:8.0.2")
         .Build();
     private readonly KeycloakContainer _keycloakContainer = new KeycloakBuilder()
-        .WithImage("quay.io/keycloak/keycloak:26.2.4")
+        .WithImage("quay.io/keycloak/keycloak:26.4.0")
         .WithResourceMapping(
             new FileInfo(Path.Combine(
                 Directory.GetCurrentDirectory(),
@@ -47,16 +47,20 @@ public sealed class TestEnvironment : IAsyncLifetime
         .WithPassword("guest")
         .Build();
 
+    private string? _keycloakAddress;
+
     public async Task InitializeAsync()
     {
         await _postgreSqlContainer.StartAsync();
         await _mongoDbContainer.StartAsync();
         await _redisContainer.StartAsync();
         await _keycloakContainer.StartAsync();
+        _keycloakAddress ??= _keycloakContainer.GetBaseAddress();
+        await KeycloakTestRealm.AllowDirectGrantsAsync(_keycloakAddress);
         await _rabbitMqContainer.StartAsync();
         
         // Common environment variables used by both services.
-        string keycloakAddress = _keycloakContainer.GetBaseAddress();
+        string keycloakAddress = _keycloakAddress;
         string realmUrl = $"{keycloakAddress}realms/evently";
         Environment.SetEnvironmentVariable("Authentication:MetadataAddress", $"{realmUrl}/.well-known/openid-configuration");
         Environment.SetEnvironmentVariable("Authentication:TokenValidationParameters:ValidIssuers", realmUrl);

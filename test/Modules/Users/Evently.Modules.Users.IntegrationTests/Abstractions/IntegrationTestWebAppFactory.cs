@@ -37,7 +37,7 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
         .WithImage("redis:8.0.2")
         .Build();
     private readonly KeycloakContainer _keycloakContainer = new KeycloakBuilder()
-        .WithImage("quay.io/keycloak/keycloak:26.2.4")
+        .WithImage("quay.io/keycloak/keycloak:26.4.0")
         .WithResourceMapping(
             new FileInfo(Path.Combine(
                 Directory.GetCurrentDirectory(),
@@ -96,6 +96,7 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
         await _mongoDbContainer.StartAsync();
         await _redisContainer.StartAsync();
         await _keycloakContainer.StartAsync();
+        await KeycloakTestRealm.AllowDirectGrantsAsync(_keycloakContainer.GetBaseAddress());
         await _rabbitMqContainer.StartAsync();
     }
 

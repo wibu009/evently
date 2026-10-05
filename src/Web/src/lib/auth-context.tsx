@@ -1,14 +1,8 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react"
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
+import type { User } from "oidc-client-ts"
 
-import {
-  clearSession,
-  decodeJwtPayload,
-  getValidAccessToken,
-  loginWithPassword,
-  logoutSession,
-  onUnauthorized
-} from "@/lib/session"
+import { userManager } from "@/lib/session"
 
 export interface AuthUser {
   id: string
@@ -20,7 +14,9 @@ interface AuthContextValue {
   user: AuthUser | null
   isLoading: boolean
   isAuthenticated: boolean
-  login: (email: string, password: string) => Promise<void>
+  /** Starts the Authorization Code + PKCE redirect to Keycloak. */
+  login: () => Promise<void>
+  /** RP-initiated logout (id_token_hint + post_logout_redirect_uri). */
   logout: () => Promise<void>
 }
 
@@ -32,120 +28,90 @@ const AuthContext = createContext<AuthContextValue>({
   logout: () => Promise.resolve()
 })
 
-function userFromToken(accessToken: string): AuthUser | null {
-  try {
-    const claims = decodeJwtPayload(accessToken)
+function userFromToken(user: User): AuthUser | null {
+  const sub = typeof user.profile.sub === "string" && user.profile.sub.length > 0 ? user.profile.sub : null
 
-    const sub = claims["sub"]
-    if (typeof sub !== "string" || sub.length === 0) {
-      return null
-    }
-
-    const email = typeof claims["email"] === "string" ? claims["email"] : ""
-    const name =
-      (typeof claims["name"] === "string" && claims["name"]) ||
-      (typeof claims["preferred_username"] === "string" && claims["preferred_username"]) ||
-      email ||
-      "You"
-
-    return { id: sub, email, name }
-  } catch {
+  if (!sub) {
     return null
   }
+
+  const email = typeof user.profile.email === "string" ? user.profile.email : ""
+  const name =
+    (typeof user.profile.name === "string" && user.profile.name) ||
+    (typeof user.profile.preferred_username === "string" && user.profile.preferred_username) ||
+    email ||
+    "You"
+
+  return { id: sub ?? "", email, name }
 }
 
 /**
- * Branded in-app authentication. Keycloak remains the identity provider under the hood
- * (password + refresh grants against the public client), but users never leave the app.
+ * Keycloak owns authentication; the storefront only observes the oidc-client-ts
+ * session (Authorization Code + PKCE). Credential entry never happens here.
  */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient()
-  const [user, setUser] = useState<AuthUser | null>(null)
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const refreshTimer = useRef<number | null>(null)
-
-  const clearRefreshTimer = () => {
-    if (refreshTimer.current !== null) {
-      window.clearTimeout(refreshTimer.current)
-      refreshTimer.current = null
-    }
-  }
-
-  const applySession = useCallback((accessToken: string | null) => {
-    clearRefreshTimer()
-    setUser(accessToken ? userFromToken(accessToken) : null)
-
-    if (accessToken) {
-      try {
-        const claims = decodeJwtPayload(accessToken)
-        const exp = typeof claims["exp"] === "number" ? claims["exp"] * 1000 : null
-        if (exp) {
-          const delay = Math.max(exp - Date.now() - 60_000, 5_000)
-          refreshTimer.current = window.setTimeout(() => {
-            void getValidAccessToken().then((token) => {
-              if (token) {
-                applySession(token)
-                void queryClient.invalidateQueries({ queryKey: ["my-permissions"] })
-              }
-            })
-          }, delay)
-        }
-      } catch {
-        // Token is already validated by use — a failed decode just skips the timer.
-      }
-    }
-  }, [queryClient])
 
   useEffect(() => {
     let cancelled = false
 
-    void getValidAccessToken()
-      .then((token) => {
-        if (!cancelled) {
-          applySession(token)
-          setIsLoading(false)
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          applySession(null)
-          setIsLoading(false)
-        }
+    const apply = (user: User | null) => {
+      setAuthUser(user ? userFromToken(user) : null)
+      if (!cancelled) {
+        setIsLoading(false)
+      }
+    }
+
+    void userManager.getUser().then(apply)
+
+    const changed = () =>
+      void userManager.getUser().then((user) => {
+        apply(user)
+        // A renewed token rotates roles/permissions server-side, not in the JWT,
+        // but the *session* changed — refresh anything keyed to the user.
+        void queryClient.invalidateQueries({ queryKey: ["my-permissions"] })
       })
 
-    const unsubscribe = onUnauthorized(() => {
-      applySession(null)
+    userManager.events.addUserLoaded(changed)
+    userManager.events.addUserUnloaded(() => {
+      apply(null)
       queryClient.clear()
+    })
+    // The silent renew failed (refresh token revoked/expired) — treat as logged out.
+    userManager.events.addSilentRenewError(() => {
+      void userManager.removeUser().then(() => {
+        apply(null)
+        queryClient.clear()
+      })
     })
 
     return () => {
       cancelled = true
-      unsubscribe()
-      if (refreshTimer.current !== null) {
-        window.clearTimeout(refreshTimer.current)
-      }
+      userManager.events.removeUserLoaded(changed)
+      userManager.events.removeUserUnloaded(changed)
+      userManager.events.removeSilentRenewError(changed)
     }
-  }, [applySession, queryClient])
+  }, [queryClient])
 
-  const login = useCallback(
-    async (email: string, password: string) => {
-      const session = await loginWithPassword(email, password)
-      applySession(session.accessToken)
-      await queryClient.invalidateQueries({ queryKey: ["my-permissions"] })
-    },
-    [applySession, queryClient]
-  )
+  const login = useCallback(async () => {
+    await userManager.signinRedirect()
+  }, [])
 
   const logout = useCallback(async () => {
-    await logoutSession()
-    clearSession()
-    applySession(null)
-    queryClient.clear()
-  }, [applySession, queryClient])
+    await userManager.signoutRedirect()
+  }, [])
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, isLoading, isAuthenticated: user !== null, login, logout }),
-    [user, isLoading, login, logout]
+    () => ({
+      user: authUser,
+      isLoading,
+      isAuthenticated: authUser !== null,
+      login,
+      logout
+    }),
+    [authUser, isLoading, login, logout]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

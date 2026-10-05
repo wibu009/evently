@@ -74,6 +74,10 @@ public static class UsersModule
 
         services.AddTransient<IIdentityProviderService, IdentityProviderService>();
 
+        // Keycloak-hosted registration creates users outside of this module —
+        // keep the Users store (roles/permissions/replicas) reconciled.
+        services.AddHostedService<KeycloakUserSyncService>();
+
         #endregion
 
         #region Authorization

@@ -5,8 +5,7 @@ import { RequireAuth, RequirePermission } from "@/components/require-auth"
 import { AppShell } from "@/components/app-shell"
 import { LoadingState } from "@/components/shared"
 
-const LoginPage = lazy(() => import("@/pages/login.page").then((m) => ({ default: m.LoginPage })))
-const RegisterPage = lazy(() => import("@/pages/register.page").then((m) => ({ default: m.RegisterPage })))
+const AuthCallbackPage = lazy(() => import("@/pages/auth-callback.page").then((m) => ({ default: m.AuthCallbackPage })))
 const CatalogPage = lazy(() => import("@/pages/catalog.page").then((m) => ({ default: m.CatalogPage })))
 const EventDetailPage = lazy(() => import("@/pages/event-detail.page").then((m) => ({ default: m.EventDetailPage })))
 const CartPage = lazy(() => import("@/pages/cart.page").then((m) => ({ default: m.CartPage })))
@@ -38,8 +37,8 @@ export function App() {
         <Route element={<AppShell />}>
           <Route path="/" element={<CatalogPage />} />
           <Route path="/events/:eventId" element={<EventDetailPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+          {/* Authorization Code + PKCE callback — keyless shell, no auth guard. */}
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
         </Route>
 
         <Route element={<RequireAuth />}>
