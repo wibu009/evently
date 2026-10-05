@@ -1,0 +1,32 @@
+{
+  "name": "evently-keycloak-theme",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "build-keycloak-theme": "npm run build && node tools/build-jar.mjs",
+    "postinstall": "keycloakify sync-extensions"
+  },
+  "allowScripts": {
+    "esbuild@0.25.12": true
+  },
+  "dependencies": {
+    "@keycloakify/login-ui": "~250004.8.0",
+    "keycloakify": "^11.16.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "tsafe": "^1.8.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.7",
+    "@types/node": "^26.6.4",
+    "@types/react": "^19.1.5",
+    "@types/react-dom": "^19.1.5",
+    "@vitejs/plugin-react": "^4.5.0",
+    "tailwindcss": "^4.1.7",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.5"
+  }
+}

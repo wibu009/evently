@@ -67,6 +67,9 @@ IResourceBuilder<ContainerResource> keycloak = builder
     .WithEnvironment("KC_HEALTH_ENABLED", "true")
     .WithEnvironment("KC_METRICS_ENABLED", "true")
     .WithBindMount(realmImportDir, "/opt/keycloak/data/import")
+    .WithBindMount(
+        Path.Combine(realmImportDir, "providers", "evently-keycloak-theme.jar"),
+        "/opt/keycloak/providers/evently-keycloak-theme.jar")
     .WithVolume("evently-keycloak-data", "/opt/keycloak/data")
     .WithArgs("start-dev", "--import-realm")
     // Health-check the management port so WaitFor(keycloak) blocks until the IdP
