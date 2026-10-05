@@ -10,6 +10,14 @@ namespace Evently.IntegrationTests.Abstractions;
 public sealed class TestEnvironment : IAsyncLifetime
 #pragma warning restore CA1515
 {
+    static TestEnvironment()
+    {
+        // Ryuk (the Testcontainers resource reaper) is a convenience, not a requirement:
+        // the fixture disposes its containers, and skipping it lets test runs work even
+        // when the container registry is unreachable (offline / firewalled machines).
+        Environment.SetEnvironmentVariable("TESTCONTAINERS_RYUK_DISABLED", "true");
+    }
+
     private readonly PostgreSqlContainer _postgreSqlContainer = new PostgreSqlBuilder()
         .WithImage("postgres:17.5")
         .WithDatabase("evently")

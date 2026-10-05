@@ -72,6 +72,21 @@ Remove-Item -Recurse -Force ./.containers   # PowerShell; `rm -rf ./.containers`
 docker compose up -d --build
 ```
 
+### Keycloak & realm configuration
+
+- The Keycloak **admin account (`admin`/`admin`), `start-dev`, and plain-HTTP transport are
+  dev-only defaults** — never use them outside local development. Production requires a
+  managed Keycloak (or equivalent) with HTTPS, a real admin credential, and a hardened realm.
+- All realm configuration lives in [`.files/evently-realm-export.json`](.files/evently-realm-export.json)
+  and is imported on startup (`--import-realm`). **The import only runs when the realm does
+  not exist** — after changing the realm JSON, existing environments must wipe their Keycloak
+  data to pick up the changes:
+  - Docker Compose: stop the stack and delete `./.containers/identity`
+  - .NET Aspire: stop the AppHost and run `docker volume rm evently-keycloak-data`
+- The login/signup UI is a [Keycloakify](https://www.keycloakify.com) theme
+  (`src/KeycloakTheme`) built to a JAR and bind-mounted to `/opt/keycloak/providers/`
+  (see "Building the login theme" below).
+
 ### Signing in
 
 The app uses **branded in-app login/signup pages** (`/login`, `/register`) with Keycloak

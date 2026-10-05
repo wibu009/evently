@@ -118,7 +118,7 @@ services:
       retries: 12
 
   evently.idp:
-    image: quay.io/keycloak/keycloak:26.2.4
+    image: quay.io/keycloak/keycloak:26.4.0
     container_name: evently.identity
     environment:
       - KC_HEALTH_ENABLED=true

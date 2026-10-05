@@ -13,6 +13,14 @@ namespace Evently.Modules.Attendance.IntegrationTests.Abstractions;
 public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
 #pragma warning restore CA1515
 {
+    static IntegrationTestWebAppFactory()
+    {
+        // Ryuk (the Testcontainers resource reaper) is a convenience, not a requirement:
+        // xUnit disposes the containers itself, and skipping it lets test runs work even
+        // when the container registry is unreachable (offline / firewalled machines).
+        Environment.SetEnvironmentVariable("TESTCONTAINERS_RYUK_DISABLED", "true");
+    }
+
     private readonly PostgreSqlContainer _postgreSqlContainer = new PostgreSqlBuilder()
         .WithImage("postgres:17.5")
         .WithDatabase("evently")

@@ -59,7 +59,7 @@ IResourceBuilder<RabbitMQServerResource> queue = builder
     .WithHttpEndpoint(targetPort: 15672, name: "management");
 
 IResourceBuilder<ContainerResource> keycloak = builder
-    .AddContainer("keycloak", "quay.io/keycloak/keycloak", "26.2.4")
+    .AddContainer("keycloak", "quay.io/keycloak/keycloak", "26.4.0")
     .WithHttpEndpoint(port: 18080, targetPort: 8080, name: "http")
     .WithHttpEndpoint(targetPort: 9000, name: "management")
     .WithEnvironment("KEYCLOAK_ADMIN", "admin")
