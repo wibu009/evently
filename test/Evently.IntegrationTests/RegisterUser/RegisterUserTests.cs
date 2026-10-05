@@ -15,7 +15,7 @@ public class RegisterUserTests(DistributedIntegrationTestFixture fixture) : Dist
     {
         var command = new RegisterUserCommand(
             Faker.Internet.Email(),
-            Faker.Internet.Password(6),
+            "IntegrationTest1!",
             Faker.Name.FirstName(),
             Faker.Name.LastName());
 
@@ -39,7 +39,7 @@ public class RegisterUserTests(DistributedIntegrationTestFixture fixture) : Dist
     {
         var command = new RegisterUserCommand(
             Faker.Internet.Email(),
-            Faker.Internet.Password(6),
+            "IntegrationTest1!",
             Faker.Name.FirstName(),
             Faker.Name.LastName());
 

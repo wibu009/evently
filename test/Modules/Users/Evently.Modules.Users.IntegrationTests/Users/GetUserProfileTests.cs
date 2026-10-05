@@ -24,7 +24,7 @@ public class GetUserProfileTests(IntegrationTestWebAppFactory factory) : BaseInt
     public async Task Should_ReturnOk_WhenUserExists()
     {
         // Arrange
-        string accessToken = await RegisterUserAndGetAccessTokenAsync("exists@test.com", Faker.Internet.Password());
+        string accessToken = await RegisterUserAndGetAccessTokenAsync("exists@test.com", NewValidPassword());
         HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
             JwtBearerDefaults.AuthenticationScheme,
             accessToken);

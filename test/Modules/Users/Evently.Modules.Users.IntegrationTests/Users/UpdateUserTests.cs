@@ -48,7 +48,7 @@ public class UpdateUserTests(IntegrationTestWebAppFactory factory) : BaseIntegra
         // Arrange
         Result<Guid> result = await Sender.Send(new RegisterUserCommand(
             Faker.Internet.Email(),
-            Faker.Internet.Password(),
+            NewValidPassword(),
             Faker.Name.FirstName(),
             Faker.Name.LastName()));
 

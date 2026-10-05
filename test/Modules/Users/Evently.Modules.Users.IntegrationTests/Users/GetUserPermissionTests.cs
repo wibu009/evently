@@ -29,7 +29,7 @@ public class GetUserPermissionTests(IntegrationTestWebAppFactory factory) : Base
         // Arrange
         Result<Guid> userResult = await Sender.Send(new RegisterUserCommand(
             Faker.Internet.Email(),
-            Faker.Internet.Password(),
+            NewValidPassword(),
             Faker.Name.FirstName(),
             Faker.Name.LastName()));
         string identityId = DbContext.Users.Single(u => u.Id == userResult.Value).IdentityId;
