@@ -10,7 +10,7 @@ Evently is a modular event management system built with .NET 9, following Clean 
   - MongoDB (Read Model)
 - **Message Broker**: RabbitMQ (MassTransit)
 - **Caching**: Redis (Hybrid Caching)
-- **Identity Provider**: Keycloak (branded in-app login/signup pages)
+- **Identity Provider**: Keycloak 26.4 (OAuth 2.1/OIDC Authorization Code + PKCE, branded Keycloakify login theme)
 - **Background Jobs**: Quartz.NET
 - **Orchestration**: .NET Aspire 13 (AppHost + ServiceDefaults) with Docker Compose as an alternative
 - **Observability**:
@@ -24,7 +24,7 @@ Evently is a modular event management system built with .NET 9, following Clean 
 
 The system is divided into the following modules:
 
-- **Users**: User management and authentication.
+- **Users**: User management (accounts, roles, permissions) behind Keycloak.
 - **Events**: Event creation, scheduling, and management.
 - **Ticketing**: Ticket sales and inventory management (Microservice).
 - **Attendance**: Tracking event attendance.
@@ -86,16 +86,58 @@ docker compose up -d --build
 - The login/signup UI is a [Keycloakify](https://www.keycloakify.com) theme
   (`src/KeycloakTheme`) built to a JAR and bind-mounted to `/opt/keycloak/providers/`
   (see "Building the login theme" below).
+- The auth stack targets the **OAuth 2.1 / OIDC profile**: Authorization Code + PKCE only
+  (public client has `directAccessGrantsEnabled: false`), strict refresh-token rotation
+  (`revokeRefreshToken: true`, `refreshTokenMaxReuse: 0`), short-lived access tokens
+  (5 min), brute-force protection, a `length(8) and digits(1)` password policy, TOTP
+  required for the `administrator` role (optional for members until they enroll), and
+  passkeys (WebAuthn passwordless policy with user-verification required).
+- Keycloak owns **all credential entry** (sign-in, registration, forgot password, OTP,
+  passkeys). The storefront never renders password inputs; the Authorization module stays
+  a pure consumer of validated JWTs.
 
 ### Signing in
 
-The app uses **branded in-app login/signup pages** (`/login`, `/register`) with Keycloak
-as the identity provider under the hood (direct-access password + refresh grants against
-the `evently-public-client`). Users never see Keycloak's pages. Registration provisions
-the Keycloak account and signs the user straight in.
+The storefront delegates to Keycloak's hosted authorization endpoint using
+**Authorization Code + PKCE** (via [oidc-client-ts](https://authts.github.io/oidc-client-ts/)):
+
+1. Clicking *Sign in* / *Get started* triggers `signinRedirect` — the browser goes to the
+   branded Keycloak login theme.
+2. After authenticating, Keycloak returns to `/auth/callback`, which exchanges the code
+   (state and nonce validated, PKCE verifier presented) and stores the session
+   (tokens in `sessionStorage`, refresh-token rotation on renew).
+3. **Step-up authentication** (RFC 10005): sensitive operations (refunds, ticket
+   transfers) require a second factor. When the API answers
+   `401` + `WWW-Authenticate: Bearer error="insufficient_user_authentication"`, the web
+   automatically re-runs the authorize request with `acr_values=2` so Keycloak escalates
+   the session (TOTP/passkey step), then the user retries the action.
 
 Browsing the event catalog and event detail pages is **public** — no login required.
 Cart, orders, tickets, and the admin/check-in areas require authentication.
+
+### Building the login theme
+
+The theme is a standalone Vite project in `src/KeycloakTheme` (React + Tailwind +
+[Keycloakify](https://github.com/keycloakify/keycloakify) v11), so the storefront build is
+untouched. It covers every default login page (sign-in, registration, forgot password,
+OTP enrollment/entry, WebAuthn register/authenticate/passkeys, required actions,
+verify-email, update-password…).
+
+```bash
+cd src/KeycloakTheme
+npm install
+npm run build-keycloak-theme   # vite bundle + keycloakify → dist_keycloak/*.jar
+```
+
+`build-keycloak-theme` uses Apache Maven when it is installed; on machines without a
+Java toolchain a documented shim (`tools/maven-shim/`) packages the identical JAR (the
+generated POM has no dependencies for this theme configuration). CI runners have Maven
+preinstalled and use the normal flow.
+
+The built JAR is committed at `.files/providers/evently-keycloak-theme.jar` and
+bind-mounted to `/opt/keycloak/providers/` by both runmodes; the realm sets
+`loginTheme: "evently"`. Rebuild and re-copy the jar into `.files/providers/` after
+theme changes, then restart the stack (providers load at boot).
 
 ### Run with Docker (Recommended)
 
@@ -120,8 +162,9 @@ six categories with three published events each (every event carrying two ticket
 | Demo admin* | `admin@evently.local` | `Evently123!` |
 | Demo member | `member@evently.local` | `Evently123!` |
 
-\* Registered with the default Member role — the role assignment endpoint does not exist yet, so
-administrative endpoints require promoting the user's role in the Users database or via Keycloak.
+\* Assigned the `Administrator` realm role (all module permissions); the member
+account keeps the default `Member` role. Roles are managed in Keycloak (the Users
+module syncs Keycloak-created users into its own store).
 
 ### Services & Ports
 

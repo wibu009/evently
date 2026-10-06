@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <ItemGroup>
+      <InternalsVisibleTo Include="Evently.Common.Infrastructure.UnitTests" />
       <ProjectReference Include="..\Evently.Common.Application\Evently.Common.Application.csproj" />
     </ItemGroup>
     <ItemGroup>

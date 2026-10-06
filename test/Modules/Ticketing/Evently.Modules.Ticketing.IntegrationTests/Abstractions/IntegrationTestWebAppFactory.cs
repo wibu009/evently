@@ -59,7 +59,9 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
                 ["Ticketing:Outbox:IntervalInSeconds"] = "3600",
                 ["Ticketing:Inbox:IntervalInSeconds"] = "3600",
                 ["Ticketing:Orders:ExpirationIntervalInSeconds"] = "3600",
-                ["SampleData:Enabled"] = "false"
+                ["SampleData:Enabled"] = "false",
+                // No `acr` claims in the direct-grant test flow — disable step-up (unit-tested).
+                ["Authentication:StepUp:Enforced"] = "false"
             });
         });
         

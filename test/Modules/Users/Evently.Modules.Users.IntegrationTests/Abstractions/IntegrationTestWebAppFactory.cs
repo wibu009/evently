@@ -82,6 +82,9 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
         string keyCloakRealmUrl = $"{keyCloakAddress}realms/evently";
         Environment.SetEnvironmentVariable("Authentication:MetadataAddress", $"{keyCloakRealmUrl}/.well-known/openid-configuration");
         Environment.SetEnvironmentVariable("Authentication:TokenValidationParameters:ValidIssuers", keyCloakRealmUrl);
+        // Test tokens come from direct grants that never carry an `acr` claim, so
+        // LoA step-up enforcement is disabled for test runs (unit tests cover the policy).
+        Environment.SetEnvironmentVariable("Authentication:StepUp:Enforced", "false");
         Environment.SetEnvironmentVariable("Users:KeyCloak:AdminUrl", $"{keyCloakAddress}admin/realms/evently/");
         Environment.SetEnvironmentVariable("Users:KeyCloak:TokenUrl", $"{keyCloakRealmUrl}/protocol/openid-connect/token");
         Environment.SetEnvironmentVariable("ConnectionStrings:writedb", _postgreSqlContainer.GetConnectionString());

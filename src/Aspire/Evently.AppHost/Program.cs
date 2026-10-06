@@ -107,6 +107,7 @@ IResourceBuilder<ProjectResource> api = builder
     .WithEnvironment("Authentication__MetadataAddress", ReferenceExpression.Create($"{keycloakHttp}/realms/evently/.well-known/openid-configuration"))
     .WithEnvironment("Authentication__TokenValidationParameters__ValidIssuers__0", ReferenceExpression.Create($"{keycloakHttp}/realms/evently"))
     .WithEnvironment("Authentication__TokenValidationParameters__ValidIssuers__1", "http://localhost:18080/realms/evently")
+    .WithEnvironment("Authentication__AuthorizedParty", "evently-public-client")
     .WithEnvironment("KeyCloak__HealthUrl", ReferenceExpression.Create($"{keycloakManagement}/health/"))
     .WithEnvironment("Serilog__WriteTo__1__Args__serverUrl", seqIngestion);
 
@@ -121,6 +122,7 @@ IResourceBuilder<ProjectResource> ticketingApi = builder
     .WithEnvironment("Authentication__MetadataAddress", ReferenceExpression.Create($"{keycloakHttp}/realms/evently/.well-known/openid-configuration"))
     .WithEnvironment("Authentication__TokenValidationParameters__ValidIssuers__0", ReferenceExpression.Create($"{keycloakHttp}/realms/evently"))
     .WithEnvironment("Authentication__TokenValidationParameters__ValidIssuers__1", "http://localhost:18080/realms/evently")
+    .WithEnvironment("Authentication__AuthorizedParty", "evently-public-client")
     .WithEnvironment("KeyCloak__HealthUrl", ReferenceExpression.Create($"{keycloakManagement}/health/"))
     .WithEnvironment("Serilog__WriteTo__1__Args__serverUrl", seqIngestion);
 
@@ -142,6 +144,7 @@ builder
     .WithEnvironment("Authentication__MetadataAddress", ReferenceExpression.Create($"{keycloakHttp}/realms/evently/.well-known/openid-configuration"))
     .WithEnvironment("Authentication__TokenValidationParameters__ValidIssuers__0", ReferenceExpression.Create($"{keycloakHttp}/realms/evently"))
     .WithEnvironment("Authentication__TokenValidationParameters__ValidIssuers__1", "http://localhost:18080/realms/evently")
+    .WithEnvironment("Authentication__AuthorizedParty", "evently-public-client")
     .WithEnvironment("Serilog__WriteTo__1__Args__serverUrl", seqIngestion)
     .WithEnvironment("ReverseProxy__Clusters__evently-cluster__Destinations__default__Address", api.GetEndpoint("http"))
     .WithEnvironment("ReverseProxy__Clusters__evently-ticketing-cluster__Destinations__default__Address", ticketingApi.GetEndpoint("http"));

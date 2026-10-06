@@ -1,4 +1,4 @@
-import { getValidAccessToken, handleUnauthorizedResponse } from "@/lib/session"
+import { getValidAccessToken, handleUnauthorizedResponse, isStepUpChallenge, requestStepUpAuthentication } from "@/lib/session"
 import { config } from "@/lib/config"
 
 export class ApiError extends Error {
@@ -51,6 +51,18 @@ async function request<TResponse>(baseUrl: string, path: string, options: Reques
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
     signal: options.signal
   })
+
+  if (response.status === 401 && isStepUpChallenge(response)) {
+    // RFC 10005: the endpoint demands a stronger authentication level
+    // (e.g. refunds). Redirect into the IdP step-up flow; execution stops here.
+    await requestStepUpAuthentication()
+
+    throw new ApiError(
+      401,
+      "Step-up authentication",
+      "A higher level of authentication is required for this operation."
+    )
+  }
 
   if (response.status === 401) {
     handleUnauthorizedResponse()

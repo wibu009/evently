@@ -64,6 +64,9 @@ public sealed class TestEnvironment : IAsyncLifetime
         string realmUrl = $"{keycloakAddress}realms/evently";
         Environment.SetEnvironmentVariable("Authentication:MetadataAddress", $"{realmUrl}/.well-known/openid-configuration");
         Environment.SetEnvironmentVariable("Authentication:TokenValidationParameters:ValidIssuers", realmUrl);
+        // Test tokens come from direct grants that never carry an `acr` claim, so
+        // LoA step-up enforcement is disabled for test runs (unit tests cover the policy).
+        Environment.SetEnvironmentVariable("Authentication:StepUp:Enforced", "false");
         Environment.SetEnvironmentVariable("Users:KeyCloak:AdminUrl", $"{keycloakAddress}admin/realms/evently/");
         Environment.SetEnvironmentVariable("Users:KeyCloak:TokenUrl", $"{realmUrl}/protocol/openid-connect/token");
         Environment.SetEnvironmentVariable("ConnectionStrings:writedb", _postgreSqlContainer.GetConnectionString());

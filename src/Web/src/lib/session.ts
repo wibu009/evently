@@ -75,6 +75,8 @@ export async function completeSignIn(): Promise<{ from: string } | null> {
   const user = await userManager.signinRedirectCallback()
   const state = user.state as { from?: string } | undefined
 
+  sessionStorage.removeItem(STEP_UP_ATTEMPTED_AT)
+
   return { from: state?.from ?? "/" }
 }
 
@@ -120,6 +122,47 @@ export async function logoutSession(): Promise<void> {
 export function handleUnauthorizedResponse() {
   void clearSession().then(notifyUnauthorized)
 }
+
+/**
+ * RFC 10005 step-up: sensitive endpoints answer insufficient LoA with
+ * 401 + `WWW-Authenticate: Bearer error="insufficient_user_authentication"`.
+ */
+const STEP_UP_CHALLENGE = /error="?insufficient_user_authentication"?/i
+const STEP_UP_ATTEMPTED_AT = "evently:step-up-attempted-at"
+const STEP_UP_AC_VALUES = "2"
+const STEP_UP_ATTEMPT_WINDOW_MS = 60_000
+
+/** True when the response is a step-up challenge rather than a plain 401. */
+export function isStepUpChallenge(response: Response): boolean {
+  const authHeader = response.headers.get("www-authenticate") ?? ""
+
+  return STEP_UP_CHALLENGE.test(authHeader)
+}
+
+/**
+ * Re-runs the authorization request with `acr_values=2` so Keycloak forces a
+ * second-factor step (TOTP / passkey) before the operation. Redirects the
+ * browser; only attempts once per window to avoid challenge loops when the
+ * IdP cannot satisfy the requested LoA.
+ */
+export async function requestStepUpAuthentication(): Promise<void> {
+  const attemptedAt = sessionStorage.getItem(STEP_UP_ATTEMPTED_AT)
+  if (attemptedAt && Date.now() - Number(attemptedAt) < STEP_UP_ATTEMPT_WINDOW_MS) {
+    handleUnauthorizedResponse()
+
+    return
+  }
+
+  sessionStorage.setItem(STEP_UP_ATTEMPTED_AT, String(Date.now()))
+
+  // Re-runs the authorization request; Keycloak's LoA condition escalates the
+  // session (TOTP passkey step) before returning a token with the higher `acr`.
+  await userManager.signinRedirect({
+    state: { from: window.location.pathname },
+    extraQueryParams: { acr_values: STEP_UP_AC_VALUES }
+  })
+}
+
 
 export function decodeJwtPayload(token: string): Record<string, unknown> {
   const payload = token.split(".")[1]
