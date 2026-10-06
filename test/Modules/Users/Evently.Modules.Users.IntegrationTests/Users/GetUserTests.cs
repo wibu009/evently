@@ -28,7 +28,7 @@ public class GetUserTests(IntegrationTestWebAppFactory factory) : BaseIntegratio
         // Arrange
         Result<Guid> result = await Sender.Send(new RegisterUserCommand(
             Faker.Internet.Email(),
-            Faker.Internet.Password(),
+            NewValidPassword(),
             Faker.Name.FirstName(),
             Faker.Name.LastName()));
         Guid userId = result.Value;

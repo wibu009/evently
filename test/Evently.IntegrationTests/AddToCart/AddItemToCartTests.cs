@@ -17,7 +17,7 @@ public class AddItemToCartTests(DistributedIntegrationTestFixture fixture) : Dis
     {
         var register = new RegisterUserCommand(
             Faker.Internet.Email(),
-            Faker.Internet.Password(6),
+            "IntegrationTest1!",
             Faker.Name.FirstName(),
             Faker.Name.LastName());
 

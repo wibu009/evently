@@ -1,3 +1,4 @@
+using Evently.Common.Application.Authorization;
 using Evently.Common.Domain;
 using Evently.Common.Presentation.Endpoints;
 using Evently.Common.Presentation.Results;
@@ -20,6 +21,7 @@ internal sealed class RefundPaymentEndpoint : IEndpoint
                 return result.Match(Results.NoContent, ApiResults.Problem);
             })
             .RequireAuthorization(Permissions.RefundPayments)
+            .RequireAuthorization(StepUpPolicies.SensitiveAction)
             .WithTags(Tags.Payments)
             .WithName("Refund Payment")
             .Produces(StatusCodes.Status204NoContent)

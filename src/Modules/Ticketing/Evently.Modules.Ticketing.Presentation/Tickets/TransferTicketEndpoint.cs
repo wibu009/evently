@@ -1,3 +1,4 @@
+using Evently.Common.Application.Authorization;
 using Evently.Common.Domain;
 using Evently.Common.Presentation.Endpoints;
 using Evently.Common.Presentation.Results;
@@ -20,6 +21,7 @@ internal sealed class TransferTicketEndpoint : IEndpoint
                 return result.Match(Results.NoContent, ApiResults.Problem);
             })
             .RequireAuthorization(Permissions.TransferTicket)
+            .RequireAuthorization(StepUpPolicies.SensitiveAction)
             .WithTags(Tags.Tickets)
             .WithName("Transfer Ticket")
             .Produces(StatusCodes.Status204NoContent)

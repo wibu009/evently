@@ -59,7 +59,7 @@ IResourceBuilder<RabbitMQServerResource> queue = builder
     .WithHttpEndpoint(targetPort: 15672, name: "management");
 
 IResourceBuilder<ContainerResource> keycloak = builder
-    .AddContainer("keycloak", "quay.io/keycloak/keycloak", "26.2.4")
+    .AddContainer("keycloak", "quay.io/keycloak/keycloak", "26.4.0")
     .WithHttpEndpoint(port: 18080, targetPort: 8080, name: "http")
     .WithHttpEndpoint(targetPort: 9000, name: "management")
     .WithEnvironment("KEYCLOAK_ADMIN", "admin")
@@ -67,6 +67,9 @@ IResourceBuilder<ContainerResource> keycloak = builder
     .WithEnvironment("KC_HEALTH_ENABLED", "true")
     .WithEnvironment("KC_METRICS_ENABLED", "true")
     .WithBindMount(realmImportDir, "/opt/keycloak/data/import")
+    .WithBindMount(
+        Path.Combine(realmImportDir, "providers", "evently-keycloak-theme.jar"),
+        "/opt/keycloak/providers/evently-keycloak-theme.jar")
     .WithVolume("evently-keycloak-data", "/opt/keycloak/data")
     .WithArgs("start-dev", "--import-realm")
     // Health-check the management port so WaitFor(keycloak) blocks until the IdP
@@ -104,6 +107,7 @@ IResourceBuilder<ProjectResource> api = builder
     .WithEnvironment("Authentication__MetadataAddress", ReferenceExpression.Create($"{keycloakHttp}/realms/evently/.well-known/openid-configuration"))
     .WithEnvironment("Authentication__TokenValidationParameters__ValidIssuers__0", ReferenceExpression.Create($"{keycloakHttp}/realms/evently"))
     .WithEnvironment("Authentication__TokenValidationParameters__ValidIssuers__1", "http://localhost:18080/realms/evently")
+    .WithEnvironment("Authentication__AuthorizedParty", "evently-public-client")
     .WithEnvironment("KeyCloak__HealthUrl", ReferenceExpression.Create($"{keycloakManagement}/health/"))
     .WithEnvironment("Serilog__WriteTo__1__Args__serverUrl", seqIngestion);
 
@@ -118,6 +122,7 @@ IResourceBuilder<ProjectResource> ticketingApi = builder
     .WithEnvironment("Authentication__MetadataAddress", ReferenceExpression.Create($"{keycloakHttp}/realms/evently/.well-known/openid-configuration"))
     .WithEnvironment("Authentication__TokenValidationParameters__ValidIssuers__0", ReferenceExpression.Create($"{keycloakHttp}/realms/evently"))
     .WithEnvironment("Authentication__TokenValidationParameters__ValidIssuers__1", "http://localhost:18080/realms/evently")
+    .WithEnvironment("Authentication__AuthorizedParty", "evently-public-client")
     .WithEnvironment("KeyCloak__HealthUrl", ReferenceExpression.Create($"{keycloakManagement}/health/"))
     .WithEnvironment("Serilog__WriteTo__1__Args__serverUrl", seqIngestion);
 
@@ -139,6 +144,7 @@ builder
     .WithEnvironment("Authentication__MetadataAddress", ReferenceExpression.Create($"{keycloakHttp}/realms/evently/.well-known/openid-configuration"))
     .WithEnvironment("Authentication__TokenValidationParameters__ValidIssuers__0", ReferenceExpression.Create($"{keycloakHttp}/realms/evently"))
     .WithEnvironment("Authentication__TokenValidationParameters__ValidIssuers__1", "http://localhost:18080/realms/evently")
+    .WithEnvironment("Authentication__AuthorizedParty", "evently-public-client")
     .WithEnvironment("Serilog__WriteTo__1__Args__serverUrl", seqIngestion)
     .WithEnvironment("ReverseProxy__Clusters__evently-cluster__Destinations__default__Address", api.GetEndpoint("http"))
     .WithEnvironment("ReverseProxy__Clusters__evently-ticketing-cluster__Destinations__default__Address", ticketingApi.GetEndpoint("http"));

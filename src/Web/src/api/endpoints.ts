@@ -111,9 +111,7 @@ export const usersApi = {
   myProfile: (signal?: AbortSignal) => api.get<UserProfile>("/users/my-profile", signal),
   myPermissions: (signal?: AbortSignal) => api.get<PermissionsResponse>("/users/my-permissions", signal),
   updateProfile: (userId: string, body: { firstName: string; lastName: string }) =>
-    api.put<void>(`/users/${userId}/profile`, body),
-  register: (body: { email: string; password: string; firstName: string; lastName: string }) =>
-    api.post<string>("/users/register", body)
+    api.put<void>(`/users/${userId}/profile`, body)
 }
 
 export interface PermissionsResponse {

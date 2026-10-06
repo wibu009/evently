@@ -118,7 +118,7 @@ services:
       retries: 12
 
   evently.idp:
-    image: quay.io/keycloak/keycloak:26.2.4
+    image: quay.io/keycloak/keycloak:26.4.0
     container_name: evently.identity
     environment:
       - KC_HEALTH_ENABLED=true
@@ -130,6 +130,7 @@ services:
     volumes:
       - ./.containers/identity:/opt/keycloak/data
       - ./.files:/opt/keycloak/data/import
+      - ./.files/providers/evently-keycloak-theme.jar:/opt/keycloak/providers/evently-keycloak-theme.jar:ro
     ports:
       - "18080:8080"
       - "9000:9000"

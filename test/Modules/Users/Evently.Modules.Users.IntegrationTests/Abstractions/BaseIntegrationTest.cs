@@ -21,6 +21,13 @@ public abstract class BaseIntegrationTest : IDisposable
     protected readonly ISender Sender;
     protected readonly UsersDbContext DbContext;
     protected readonly HttpClient HttpClient;
+
+    /// <summary>
+    /// The test realm enforces a password policy (length(8) and digits(1)) on
+    /// credential creation; Faker.Internet.Password() violates it at random,
+    /// so registrations use a generated, policy-compliant password.
+    /// </summary>
+    protected static string NewValidPassword() => $"Test-{Faker.Random.Number(100000, 999999)}!a";
     
     protected BaseIntegrationTest(IntegrationTestWebAppFactory factory)
     {

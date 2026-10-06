@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Evently.Common.Application.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 
 namespace Evently.Common.Infrastructure.Authorization;
@@ -13,6 +14,18 @@ internal sealed class PermissionAuthorizationPolicyProvider(IOptions<Authorizati
         if (policy is not null)
         {
             return policy;
+        }
+
+        if (policyName == StepUpPolicies.SensitiveAction)
+        {
+            AuthorizationPolicy stepUpPolicy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .AddRequirements(new StepUpRequirement(StepUpPolicies.SensitiveActionLoa))
+                .Build();
+
+            _authorizationOptions.AddPolicy(policyName, stepUpPolicy);
+
+            return stepUpPolicy;
         }
 
         AuthorizationPolicy permissionPolicy = new AuthorizationPolicyBuilder()

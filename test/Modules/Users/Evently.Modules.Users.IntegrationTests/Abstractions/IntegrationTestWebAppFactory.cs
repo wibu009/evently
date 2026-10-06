@@ -14,6 +14,14 @@ namespace Evently.Modules.Users.IntegrationTests.Abstractions;
 public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
 #pragma warning restore CA1515
 {
+    static IntegrationTestWebAppFactory()
+    {
+        // Ryuk (the Testcontainers resource reaper) is a convenience, not a requirement:
+        // xUnit disposes the containers itself, and skipping it lets test runs work even
+        // when the container registry is unreachable (offline / firewalled machines).
+        Environment.SetEnvironmentVariable("TESTCONTAINERS_RYUK_DISABLED", "true");
+    }
+
     private readonly PostgreSqlContainer _postgreSqlContainer = new PostgreSqlBuilder()
         .WithImage("postgres:17.5")
         .WithDatabase("evently")
@@ -29,7 +37,7 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
         .WithImage("redis:8.0.2")
         .Build();
     private readonly KeycloakContainer _keycloakContainer = new KeycloakBuilder()
-        .WithImage("quay.io/keycloak/keycloak:26.2.4")
+        .WithImage("quay.io/keycloak/keycloak:26.4.0")
         .WithResourceMapping(
             new FileInfo(Path.Combine(
                 Directory.GetCurrentDirectory(),
@@ -74,6 +82,9 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
         string keyCloakRealmUrl = $"{keyCloakAddress}realms/evently";
         Environment.SetEnvironmentVariable("Authentication:MetadataAddress", $"{keyCloakRealmUrl}/.well-known/openid-configuration");
         Environment.SetEnvironmentVariable("Authentication:TokenValidationParameters:ValidIssuers", keyCloakRealmUrl);
+        // Test tokens come from direct grants that never carry an `acr` claim, so
+        // LoA step-up enforcement is disabled for test runs (unit tests cover the policy).
+        Environment.SetEnvironmentVariable("Authentication:StepUp:Enforced", "false");
         Environment.SetEnvironmentVariable("Users:KeyCloak:AdminUrl", $"{keyCloakAddress}admin/realms/evently/");
         Environment.SetEnvironmentVariable("Users:KeyCloak:TokenUrl", $"{keyCloakRealmUrl}/protocol/openid-connect/token");
         Environment.SetEnvironmentVariable("ConnectionStrings:writedb", _postgreSqlContainer.GetConnectionString());
@@ -88,6 +99,7 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
         await _mongoDbContainer.StartAsync();
         await _redisContainer.StartAsync();
         await _keycloakContainer.StartAsync();
+        await KeycloakTestRealm.AllowDirectGrantsAsync(_keycloakContainer.GetBaseAddress());
         await _rabbitMqContainer.StartAsync();
     }
 

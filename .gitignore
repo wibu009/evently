@@ -405,3 +405,6 @@ FodyWeavers.xsd
 
 # Browser automation session artifacts
 .playwright-mcp/
+# Tooling screenshots
+.openchamber/
+.playwright-mcp/

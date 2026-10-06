@@ -10,6 +10,14 @@ namespace Evently.IntegrationTests.Abstractions;
 public sealed class TestEnvironment : IAsyncLifetime
 #pragma warning restore CA1515
 {
+    static TestEnvironment()
+    {
+        // Ryuk (the Testcontainers resource reaper) is a convenience, not a requirement:
+        // the fixture disposes its containers, and skipping it lets test runs work even
+        // when the container registry is unreachable (offline / firewalled machines).
+        Environment.SetEnvironmentVariable("TESTCONTAINERS_RYUK_DISABLED", "true");
+    }
+
     private readonly PostgreSqlContainer _postgreSqlContainer = new PostgreSqlBuilder()
         .WithImage("postgres:17.5")
         .WithDatabase("evently")
@@ -25,7 +33,7 @@ public sealed class TestEnvironment : IAsyncLifetime
         .WithImage("redis:8.0.2")
         .Build();
     private readonly KeycloakContainer _keycloakContainer = new KeycloakBuilder()
-        .WithImage("quay.io/keycloak/keycloak:26.2.4")
+        .WithImage("quay.io/keycloak/keycloak:26.4.0")
         .WithResourceMapping(
             new FileInfo(Path.Combine(
                 Directory.GetCurrentDirectory(),
@@ -39,19 +47,26 @@ public sealed class TestEnvironment : IAsyncLifetime
         .WithPassword("guest")
         .Build();
 
+    private string? _keycloakAddress;
+
     public async Task InitializeAsync()
     {
         await _postgreSqlContainer.StartAsync();
         await _mongoDbContainer.StartAsync();
         await _redisContainer.StartAsync();
         await _keycloakContainer.StartAsync();
+        _keycloakAddress ??= _keycloakContainer.GetBaseAddress();
+        await KeycloakTestRealm.AllowDirectGrantsAsync(_keycloakAddress);
         await _rabbitMqContainer.StartAsync();
         
         // Common environment variables used by both services.
-        string keycloakAddress = _keycloakContainer.GetBaseAddress();
+        string keycloakAddress = _keycloakAddress;
         string realmUrl = $"{keycloakAddress}realms/evently";
         Environment.SetEnvironmentVariable("Authentication:MetadataAddress", $"{realmUrl}/.well-known/openid-configuration");
         Environment.SetEnvironmentVariable("Authentication:TokenValidationParameters:ValidIssuers", realmUrl);
+        // Test tokens come from direct grants that never carry an `acr` claim, so
+        // LoA step-up enforcement is disabled for test runs (unit tests cover the policy).
+        Environment.SetEnvironmentVariable("Authentication:StepUp:Enforced", "false");
         Environment.SetEnvironmentVariable("Users:KeyCloak:AdminUrl", $"{keycloakAddress}admin/realms/evently/");
         Environment.SetEnvironmentVariable("Users:KeyCloak:TokenUrl", $"{realmUrl}/protocol/openid-connect/token");
         Environment.SetEnvironmentVariable("ConnectionStrings:writedb", _postgreSqlContainer.GetConnectionString());

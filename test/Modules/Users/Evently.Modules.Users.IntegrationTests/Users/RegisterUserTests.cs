@@ -42,7 +42,7 @@ public class RegisterUserTests(IntegrationTestWebAppFactory factory) : BaseInteg
         var request = new
         {
             Email = "create@test.com",
-            Password = Faker.Internet.Password(),
+            Password = NewValidPassword(),
             FirstName = Faker.Name.FirstName(),
             LastName = Faker.Name.LastName()
         };
@@ -61,7 +61,7 @@ public class RegisterUserTests(IntegrationTestWebAppFactory factory) : BaseInteg
         var request = new
         {
             Email = "token@test.com",
-            Password = Faker.Internet.Password(),
+            Password = NewValidPassword(),
             FirstName = Faker.Name.FirstName(),
             LastName = Faker.Name.LastName()
         };

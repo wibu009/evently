@@ -1,5 +1,13 @@
+import { UserManager, WebStorageStateStore } from "oidc-client-ts"
+
 import { config } from "@/lib/config"
 
+/**
+ * Authentication speaks the Authorization Code Flow with PKCE (S256) — the only
+ * browser-appropriate flow under OAuth 2.1 (RFC 7636) and the browser-app BCP
+ * (RFC 10017). Keycloak owns all credential entry; this module never sees a
+ * password, and tokens live in sessionStorage owned by oidc-client-ts.
+ */
 export class AuthError extends Error {
   readonly code: "invalid-credentials" | "unavailable" | "unknown"
 
@@ -9,23 +17,6 @@ export class AuthError extends Error {
     this.code = code
   }
 }
-
-interface StoredSession {
-  accessToken: string
-  refreshToken: string | null
-  idToken: string | null
-  expiresAt: number
-}
-
-interface TokenResponse {
-  access_token: string
-  refresh_token?: string
-  id_token?: string
-  expires_in: number
-}
-
-const STORAGE_KEY = "evently-session"
-const REFRESH_SKEW_MS = 60_000
 
 type UnauthorizedListener = () => void
 const unauthorizedListeners = new Set<UnauthorizedListener>()
@@ -42,170 +33,143 @@ function notifyUnauthorized() {
   unauthorizedListeners.forEach((listener) => listener())
 }
 
-function tokenEndpoint(): string {
-  return `${config.oidc.authority}/protocol/openid-connect/token`
+export const userManager = new UserManager({
+  authority: config.oidc.authority,
+  client_id: config.oidc.clientId,
+  redirect_uri: `${window.location.origin}/auth/callback`,
+  post_logout_redirect_uri: `${window.location.origin}/`,
+  response_type: "code",
+  scope: "openid profile email",
+  // Same storage surface the manual session layer used: sessionStorage, not
+  // localStorage, so tokens die with the tab. (Phase 5 BFF removes browser
+  // token exposure entirely.)
+  userStore: new WebStorageStateStore({ store: window.sessionStorage }),
+  // Renewal uses the refresh-token grant (Keycloak rotates refresh tokens,
+  // max reuse 0) — no iframe and no third-party-cookie dependency.
+  automaticSilentRenew: true,
+  accessTokenExpiringNotificationTimeInSeconds: 60
+})
+
+userManager.events.addUserLoaded(() => {
+  // The silent renew produced a fresh access token; nothing else to do here.
+})
+
+userManager.events.addUserUnloaded(() => {
+  notifyUnauthorized()
+})
+
+userManager.events.addSilentRenewError(() => {
+  handleUnauthorizedResponse()
+})
+
+/**
+ * Starts the Authorization Code + PKCE flow against Keycloak.
+ * `from` is carried through the flow's state and honored by the callback route.
+ */
+export async function redirectToSignIn(from?: string): Promise<void> {
+  await userManager.signinRedirect({ state: { from: from ?? "/" } })
 }
 
-function loadSession(): StoredSession | null {
+/** Callback route handler: exchanges the code (verifier vs Keycloak's challenge). */
+export async function completeSignIn(): Promise<{ from: string } | null> {
+  const user = await userManager.signinRedirectCallback()
+  const state = user.state as { from?: string } | undefined
+
+  sessionStorage.removeItem(STEP_UP_ATTEMPTED_AT)
+
+  return { from: state?.from ?? "/" }
+}
+
+/**
+ * Returns a valid access token, renewing it when expired (refresh grant).
+ * Returns null when there is no session.
+ */
+export async function getValidAccessToken(): Promise<string | null> {
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY)
-    if (!raw) {
-      return null
+    let user = await userManager.getUser()
+
+    if (!user || user.expired || !user.access_token) {
+      user = await userManager.signinSilent()
     }
 
-    return JSON.parse(raw) as StoredSession
+    return user?.access_token ?? null
   } catch {
+    handleUnauthorizedResponse()
+
     return null
   }
 }
 
-function saveSession(session: StoredSession) {
-  sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session))
+/** Clears the local session state without ending the Keycloak session. */
+export async function clearSession(): Promise<void> {
+  await userManager.removeUser()
 }
 
-export function clearSession() {
-  sessionStorage.removeItem(STORAGE_KEY)
+/**
+ * RP-initiated logout (OIDC): sends id_token_hint + post_logout_redirect_uri
+ * so Keycloak ends the SSO session and returns the user to the storefront.
+ */
+export async function logoutSession(): Promise<void> {
+  try {
+    await userManager.signoutRedirect()
+  } catch {
+    // The SSO session may already be gone; the local state is cleared below.
+    await clearSession()
+    notifyUnauthorized()
+  }
 }
+
+export function handleUnauthorizedResponse() {
+  void clearSession().then(notifyUnauthorized)
+}
+
+/**
+ * RFC 10005 step-up: sensitive endpoints answer insufficient LoA with
+ * 401 + `WWW-Authenticate: Bearer error="insufficient_user_authentication"`.
+ */
+const STEP_UP_CHALLENGE = /error="?insufficient_user_authentication"?/i
+const STEP_UP_ATTEMPTED_AT = "evently:step-up-attempted-at"
+const STEP_UP_AC_VALUES = "2"
+const STEP_UP_ATTEMPT_WINDOW_MS = 60_000
+
+/** True when the response is a step-up challenge rather than a plain 401. */
+export function isStepUpChallenge(response: Response): boolean {
+  const authHeader = response.headers.get("www-authenticate") ?? ""
+
+  return STEP_UP_CHALLENGE.test(authHeader)
+}
+
+/**
+ * Re-runs the authorization request with `acr_values=2` so Keycloak forces a
+ * second-factor step (TOTP / passkey) before the operation. Redirects the
+ * browser; only attempts once per window to avoid challenge loops when the
+ * IdP cannot satisfy the requested LoA.
+ */
+export async function requestStepUpAuthentication(): Promise<void> {
+  const attemptedAt = sessionStorage.getItem(STEP_UP_ATTEMPTED_AT)
+  if (attemptedAt && Date.now() - Number(attemptedAt) < STEP_UP_ATTEMPT_WINDOW_MS) {
+    handleUnauthorizedResponse()
+
+    return
+  }
+
+  sessionStorage.setItem(STEP_UP_ATTEMPTED_AT, String(Date.now()))
+
+  // Re-runs the authorization request; Keycloak's LoA condition escalates the
+  // session (TOTP passkey step) before returning a token with the higher `acr`.
+  await userManager.signinRedirect({
+    state: { from: window.location.pathname },
+    extraQueryParams: { acr_values: STEP_UP_AC_VALUES }
+  })
+}
+
 
 export function decodeJwtPayload(token: string): Record<string, unknown> {
   const payload = token.split(".")[1]
   const normalized = payload.replace(/-/g, "+").replace(/_/g, "/")
   const padded = normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), "=")
+  const bytes = Uint8Array.from(atob(padded), (c) => c.charCodeAt(0))
+  const json = new TextDecoder("utf-8").decode(bytes)
 
-  return JSON.parse(atob(padded)) as Record<string, unknown>
-}
-
-function toStoredSession(response: TokenResponse): StoredSession {
-  return {
-    accessToken: response.access_token,
-    refreshToken: response.refresh_token ?? null,
-    idToken: response.id_token ?? null,
-    expiresAt: Date.now() + response.expires_in * 1000
-  }
-}
-
-async function requestTokens(params: Record<string, string>): Promise<TokenResponse> {
-  let response: Response
-  try {
-    response = await fetch(tokenEndpoint(), {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ client_id: config.oidc.clientId, ...params })
-    })
-  } catch {
-    throw new AuthError("unavailable", "The identity provider is unreachable. Please try again.")
-  }
-
-  if (response.status === 400 || response.status === 401) {
-    throw new AuthError("invalid-credentials", "Invalid email or password.")
-  }
-
-  if (!response.ok) {
-    throw new AuthError("unknown", "Sign-in failed. Please try again.")
-  }
-
-  return (await response.json()) as TokenResponse
-}
-
-/**
- * Signs in with an email + password against Keycloak (direct access grant),
- * keeping the branded in-app login page while Keycloak stays the identity provider.
- */
-export async function loginWithPassword(email: string, password: string): Promise<StoredSession> {
-  const tokens = await requestTokens({
-    grant_type: "password",
-    username: email.trim(),
-    password,
-    scope: "openid profile email"
-  })
-
-  const session = toStoredSession(tokens)
-  saveSession(session)
-
-  return session
-}
-
-let refreshInFlight: Promise<StoredSession> | null = null
-
-async function refreshSession(session: StoredSession): Promise<StoredSession> {
-  if (!session.refreshToken) {
-    throw new AuthError("unknown", "Session expired. Please sign in again.")
-  }
-
-  if (!refreshInFlight) {
-    refreshInFlight = requestTokens({
-      grant_type: "refresh_token",
-      refresh_token: session.refreshToken
-    })
-      .then((tokens) => {
-        const next: StoredSession = {
-          ...toStoredSession(tokens),
-          refreshToken: tokens.refresh_token ?? session.refreshToken
-        }
-        saveSession(next)
-
-        return next
-      })
-      .finally(() => {
-        refreshInFlight = null
-      })
-  }
-
-  return refreshInFlight
-}
-
-/**
- * Returns a valid access token, refreshing it when it is expired or close to it.
- * Returns null when there is no session.
- */
-export async function getValidAccessToken(): Promise<string | null> {
-  const session = loadSession()
-  if (!session) {
-    return null
-  }
-
-  if (session.expiresAt - Date.now() > REFRESH_SKEW_MS) {
-    return session.accessToken
-  }
-
-  try {
-    const refreshed = await refreshSession(session)
-
-    return refreshed.accessToken
-  } catch {
-    clearSession()
-    notifyUnauthorized()
-
-    return null
-  }
-}
-
-export function getStoredSession(): StoredSession | null {
-  return loadSession()
-}
-
-/**
- * Ends the Keycloak session (best effort) and clears the local session.
- */
-export async function logoutSession(): Promise<void> {
-  const session = loadSession()
-  clearSession()
-
-  if (session?.idToken) {
-    const logoutUrl =
-      `${config.oidc.authority}/protocol/openid-connect/logout` +
-      `?post_logout_redirect_uri=${encodeURIComponent(window.location.origin)}` +
-      `&id_token_hint=${encodeURIComponent(session.idToken)}`
-
-    try {
-      await fetch(logoutUrl, { mode: "no-cors" })
-    } catch {
-      // Logout is best effort — the local session is already cleared.
-    }
-  }
-}
-
-export function handleUnauthorizedResponse() {
-  clearSession()
-  notifyUnauthorized()
+  return JSON.parse(json) as Record<string, unknown>
 }

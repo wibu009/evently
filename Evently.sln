@@ -1,4 +1,4 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.12.35707.178
@@ -22,7 +22,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Events", "Events", "{DBEAB1AF-74E7-4FCE-A13F-FD071FB97168}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Evently.Api", "src\API\Evently.Api\Evently.Api.csproj", "{6761C474-A54D-46F4-A8D9-79E1ACF5A91B}"
-EndProject
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Evently.Modules.Events.Domain", "src\Modules\Events\Evently.Modules.Events.Domain\Evently.Modules.Events.Domain.csproj", "{C68F1F2A-816F-4ACA-9BA1-0B7B4140F5FB}"
 EndProject
@@ -129,6 +128,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Evently.ServiceDefaults", "src\Aspire\Evently.ServiceDefaults\Evently.ServiceDefaults.csproj", "{CC68FD33-E06F-4FC7-9A73-45C1E0A8810E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Evently.AppHost", "src\Aspire\Evently.AppHost\Evently.AppHost.csproj", "{F2E5D25A-A506-4055-98B0-6BCAF2362BF6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{6C8BCE5B-E106-AA2C-424B-27FEC4066289}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Evently.Common.Infrastructure.UnitTests", "test\Common\Evently.Common.Infrastructure.UnitTests\Evently.Common.Infrastructure.UnitTests.csproj", "{96E43105-FD22-49E1-B061-6B060B346DA7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -656,6 +659,18 @@ Global
 		{F2E5D25A-A506-4055-98B0-6BCAF2362BF6}.Release|x64.Build.0 = Release|Any CPU
 		{F2E5D25A-A506-4055-98B0-6BCAF2362BF6}.Release|x86.ActiveCfg = Release|Any CPU
 		{F2E5D25A-A506-4055-98B0-6BCAF2362BF6}.Release|x86.Build.0 = Release|Any CPU
+		{96E43105-FD22-49E1-B061-6B060B346DA7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96E43105-FD22-49E1-B061-6B060B346DA7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96E43105-FD22-49E1-B061-6B060B346DA7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{96E43105-FD22-49E1-B061-6B060B346DA7}.Debug|x64.Build.0 = Debug|Any CPU
+		{96E43105-FD22-49E1-B061-6B060B346DA7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{96E43105-FD22-49E1-B061-6B060B346DA7}.Debug|x86.Build.0 = Debug|Any CPU
+		{96E43105-FD22-49E1-B061-6B060B346DA7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96E43105-FD22-49E1-B061-6B060B346DA7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{96E43105-FD22-49E1-B061-6B060B346DA7}.Release|x64.ActiveCfg = Release|Any CPU
+		{96E43105-FD22-49E1-B061-6B060B346DA7}.Release|x64.Build.0 = Release|Any CPU
+		{96E43105-FD22-49E1-B061-6B060B346DA7}.Release|x86.ActiveCfg = Release|Any CPU
+		{96E43105-FD22-49E1-B061-6B060B346DA7}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -717,5 +732,7 @@ Global
 		{1857D8EF-3CF1-20F0-C09C-13F1B41CF144} = {8F4EE78A-DA47-47B9-A0DD-35BF50E0D474}
 		{CC68FD33-E06F-4FC7-9A73-45C1E0A8810E} = {1857D8EF-3CF1-20F0-C09C-13F1B41CF144}
 		{F2E5D25A-A506-4055-98B0-6BCAF2362BF6} = {1857D8EF-3CF1-20F0-C09C-13F1B41CF144}
+		{6C8BCE5B-E106-AA2C-424B-27FEC4066289} = {F5A442B0-796A-4E47-A53B-F23F781D580D}
+		{96E43105-FD22-49E1-B061-6B060B346DA7} = {6C8BCE5B-E106-AA2C-424B-27FEC4066289}
 	EndGlobalSection
 EndGlobal

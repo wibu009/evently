@@ -13,6 +13,14 @@ namespace Evently.Modules.Ticketing.IntegrationTests.Abstractions;
 public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
 #pragma warning restore CA1515
 {
+    static IntegrationTestWebAppFactory()
+    {
+        // Ryuk (the Testcontainers resource reaper) is a convenience, not a requirement:
+        // xUnit disposes the containers itself, and skipping it lets test runs work even
+        // when the container registry is unreachable (offline / firewalled machines).
+        Environment.SetEnvironmentVariable("TESTCONTAINERS_RYUK_DISABLED", "true");
+    }
+
     private readonly PostgreSqlContainer _postgreSqlContainer = new PostgreSqlBuilder()
         .WithImage("postgres:17.5")
         .WithDatabase("evently_ticketing")
@@ -51,7 +59,9 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
                 ["Ticketing:Outbox:IntervalInSeconds"] = "3600",
                 ["Ticketing:Inbox:IntervalInSeconds"] = "3600",
                 ["Ticketing:Orders:ExpirationIntervalInSeconds"] = "3600",
-                ["SampleData:Enabled"] = "false"
+                ["SampleData:Enabled"] = "false",
+                // No `acr` claims in the direct-grant test flow — disable step-up (unit-tested).
+                ["Authentication:StepUp:Enforced"] = "false"
             });
         });
         

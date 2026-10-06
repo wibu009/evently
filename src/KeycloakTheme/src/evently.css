@@ -1,0 +1,47 @@
+:root {
+  --evently-background: #0b0612;
+  --evently-card: rgba(24, 14, 34, 0.86);
+  --evently-primary: #a855f7;
+  --evently-primary-strong: #7e22ce;
+  --evently-accent: #f97316;
+  --evently-text: #faf5ff;
+  --evently-muted: rgba(250, 245, 255, 0.72);
+  --evently-border: rgba(168, 85, 247, 0.28);
+}
+
+body.evently-keycloak {
+  background:
+    radial-gradient(ellipse 75% 55% at 50% 0%, rgba(168, 85, 247, 0.28), transparent),
+    var(--evently-background);
+  color: var(--evently-text);
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.evently-keycloak .card-pf,
+.evently-keycloak .login-pf-page .card-pf {
+  background: var(--evently-card);
+  border: 1px solid var(--evently-border);
+  border-radius: 1.25rem;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+}
+
+.evently-keycloak a {
+  color: #d8b4fe;
+}
+
+.evently-keycloak .btn-primary,
+.evently-keycloak button[type="submit"].btn-primary,
+.evently-keycloak input[type="submit"].btn-primary {
+  background: linear-gradient(135deg, var(--evently-primary), var(--evently-accent));
+  border: none;
+  border-radius: 0.9rem;
+  font-weight: 700;
+}
+
+.evently-keycloak .form-control {
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--evently-border);
+  color: var(--evently-text);
+}

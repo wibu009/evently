@@ -142,6 +142,8 @@ public static class InfrastructureConfiguration
         services.AddTransient<IClaimsTransformation, CustomClaimsTransformation>();
         services.AddTransient<IAuthorizationHandler, PermissionAuthorizationHandler>();
         services.AddTransient<IAuthorizationPolicyProvider, PermissionAuthorizationPolicyProvider>();
+        services.AddSingleton<IAuthorizationHandler, StepUpAuthorizationHandler>();
+        services.AddSingleton<IAuthorizationMiddlewareResultHandler, StepUpAuthorizationResultHandler>();
 
         #endregion
 

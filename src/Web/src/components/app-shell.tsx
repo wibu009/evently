@@ -108,7 +108,7 @@ export function AppShell() {
   const has = useHasPermission()
   const navigate = useNavigate()
   const location = useLocation()
-  const { logout } = useAuthContext()
+  const { login, logout } = useAuthContext()
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const cartQuery = useQuery({
@@ -230,11 +230,11 @@ export function AppShell() {
               </DropdownMenu>
             ) : (
               <div className="ml-1 flex items-center gap-1.5">
-                <Button variant="ghost" size="sm" className="btn-press hidden rounded-lg sm:inline-flex" asChild>
-                  <NavLink to="/login">Sign in</NavLink>
+                <Button variant="ghost" size="sm" className="btn-press hidden rounded-lg sm:inline-flex" onClick={() => void login()}>
+                  Sign in
                 </Button>
-                <Button size="sm" className="btn-press rounded-lg font-semibold" asChild>
-                  <NavLink to="/register">Get started</NavLink>
+                <Button size="sm" className="btn-press rounded-lg font-semibold" onClick={() => void login()}>
+                  Get started
                 </Button>
               </div>
             )}

@@ -1,5 +1,4 @@
 import { useCallback, useState } from "react"
-import { Link, useLocation, useNavigate } from "react-router"
 import { LogIn, Ticket } from "lucide-react"
 
 import { useAuthContext } from "@/lib/auth-context"
@@ -16,12 +15,11 @@ import {
 /**
  * Guards an action behind authentication. When the visitor is anonymous,
  * a branded sign-in prompt opens instead of firing the request into a 401.
- * After signing in, the user lands back on the page they came from.
+ * Signing in redirects to Keycloak and the callback route returns the user
+ * to the page they came from.
  */
 export function useSignInPrompt() {
-  const { isAuthenticated } = useAuthContext()
-  const navigate = useNavigate()
-  const location = useLocation()
+  const { login, isAuthenticated } = useAuthContext()
   const [open, setOpen] = useState(false)
 
   const requireAuth = useCallback(
@@ -52,15 +50,10 @@ export function useSignInPrompt() {
             className="btn-press h-11 w-full rounded-xl font-bold"
             onClick={() => {
               setOpen(false)
-              navigate("/login", { state: { from: location.pathname } })
+              void login()
             }}
           >
             <LogIn className="size-4" /> Sign in
-          </Button>
-          <Button variant="outline" className="btn-press h-11 w-full rounded-xl" asChild>
-            <Link to="/register" onClick={() => setOpen(false)}>
-              Create an account
-            </Link>
           </Button>
         </DialogFooter>
       </DialogContent>
